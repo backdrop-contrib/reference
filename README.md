@@ -1,2 +1,2 @@
-# reference
-A custom module to provide a reference field for connecting Drupal entities.
+# Reference
+Defines a field type for referencing other entites in Backdrop.

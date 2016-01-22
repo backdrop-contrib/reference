@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Defines a field type for referncing other entites.
+ * Defines a field type for referencing other entites.
  */
 
 /**
@@ -12,7 +12,7 @@ function reference_field_info() {
   return array(
     'reference' => array(
       'label' => t('Reference'),
-      'description' => t('Defines a field type for referncing other entites.'),
+      'description' => t('Defines a field type for referencing other entites.'),
       'instance_settings' => array('entity_type' => '', 'bundle' => '', 'status' => ''),
       'default_widget' => 'reference_autocomplete',
       'default_formatter' => 'simple_link',

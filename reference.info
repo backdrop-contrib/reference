@@ -1,5 +1,5 @@
 name = Reference
-description = Defines a field type for referencing other entities.
+description = Defines a field type for referencing other entites.
 package = Fields
 version = BACKDROP_VERSION
 type = module
