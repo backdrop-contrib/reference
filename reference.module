@@ -1,0 +1,96 @@
+<?php
+
+/**
+ * @file
+ * Defines a field type for referncing other entites.
+ */
+
+/**
+ * Implements hook_field_info().
+ */
+function reference_field_info() {
+  return array(
+    'reference' => array(
+      'label' => t('Reference'),
+      'description' => t('Defines a field type for referncing other entites.'),
+      'instance_settings' => array('entity_type' => '', 'bundle' => '', 'status' => ''),
+      'default_widget' => 'reference_autocomplete',
+      'default_formatter' => 'simple_link',
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_field_settings_form().
+ */
+function reference_field_settings_form($field, $instance, $has_data) {
+  $settings = $field['settings'];
+  $form = array();
+
+    $form['entity_type'] = array(
+    '#type' => 'textfield',
+    // TODO: switch to select field
+    //'#type' => 'select',
+    '#title' => t('Entity type'),
+    // TODO: Get the options from hook_entity_info
+    // '#options' => backdrop_map_assoc(range(10, 32)),
+    '#description' => t('The machine name of the entity.'),
+    // TODO: COME UP WITH A VALIDATE FUNCTION 
+    // '#element_validate' => array('form_validate_number'),
+    '#default_value' => $settings['entity_type'],
+    );
+
+    $form['bundle'] = array(
+    '#type' => 'textfield',
+    // TODO: switch to a multiselect select field
+    //'#type' => 'select',
+    '#title' => t('Bundle'),
+    // TODO: Get the options from hook_entity_info
+    // '#options' => array(),
+    '#description' => t('The machine name of the bundle.'),
+    // TODO: COME UP WITH A VALIDATE FUNCTION 
+    // '#element_validate' => array('form_validate_number'),
+    '#default_value' => $settings['bundle'],
+    );
+
+
+  return $form;
+}
+
+
+/**
+ * Implements hook_field_instance_settings_form().
+ */
+function reference_field_instance_settings_form($field, $instance) {
+  $settings = $instance['settings'];
+
+  $form['status'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Limit to published content'),
+    '#default_value' => $settings['status'],
+  );
+  return $form;
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function reference_field_is_empty($item, $field) {
+
+  // TODO: Write a function to see if the field is empty
+    return TRUE;
+}
+
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function reference_field_widget_info() {
+  return array(
+    'reference_autocomplete' => array(
+      'label' => t('Autocomplete'),
+      'field types' => array('reference'),
+    ),
+  );
+}
