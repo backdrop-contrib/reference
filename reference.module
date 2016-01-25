@@ -38,7 +38,7 @@ function reference_field_settings_form($field, $instance, $has_data) {
     '#description' => t('The machine name of the entity.'),
     // TODO: COME UP WITH A VALIDATE FUNCTION 
     // '#element_validate' => array('form_validate_number'),
-    '#default_value' => $settings['entity_type'],
+    '#default_value' => isset($settings['entity_type']) ? $settings['entity_type'] : '',
     );
 
     $form['bundle'] = array(
@@ -51,7 +51,7 @@ function reference_field_settings_form($field, $instance, $has_data) {
     '#description' => t('The machine name of the bundle.'),
     // TODO: COME UP WITH A VALIDATE FUNCTION 
     // '#element_validate' => array('form_validate_number'),
-    '#default_value' => $settings['bundle'],
+    '#default_value' => isset($settings['bundle']) ? $settings['bundle'] : '',
     );
 
 
