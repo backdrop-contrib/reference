@@ -99,3 +99,21 @@ function reference_field_widget_info() {
     ),
   );
 }
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $target_type = array(
+    '#type' => 'textfield',
+    '#description' => 'Entity type',
+    '#default_value' => isset($items[$delta]['target_type']) ? $items[$delta]['target_type'] : '',
+  );
+  $target_id = array(
+    '#type' => 'textfield',
+    '#description' => 'Entity id',
+    '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : '',
+  );
+  return array('target_type' => $target_type, 'target_id' => $target_id);
+}
+
