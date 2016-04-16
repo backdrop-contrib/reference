@@ -52,20 +52,6 @@ function reference_field_settings_form($field, $instance, $has_data) {
     '#default_value' => isset($settings['entity_type']) ? $settings['entity_type'] : '',
     );
 
-    $form['bundle'] = array(
-    '#type' => 'textfield',
-    // TODO: switch to a multiselect select field
-    //'#type' => 'select',
-    '#title' => t('Bundle'),
-    // TODO: Get the options from hook_entity_info
-    // '#options' => array(),
-    '#description' => t('The machine name of the bundle.'),
-    // TODO: COME UP WITH A VALIDATE FUNCTION 
-    // '#element_validate' => array('form_validate_number'),
-    '#default_value' => isset($settings['bundle']) ? $settings['bundle'] : '',
-    );
-
-
   return $form;
 }
 
@@ -80,6 +66,14 @@ function reference_field_instance_settings_form($field, $instance) {
     '#type' => 'checkbox',
     '#title' => t('Limit to published content'),
     '#default_value' => $settings['status'],
+  );
+  $form['bundles'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Limit to types'),
+    '#options' => _reference_entity_bundle_options($field['settings']['entity_type']),
+    '#multiple' => TRUE,
+    '#description' => t('Leave unchecked to allow all types to be referenced.'),
+    '#default_value' => isset($settings['bundles']) ? $settings['bundles'] : array(),
   );
   return $form;
 }
