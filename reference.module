@@ -6,6 +6,17 @@
  */
 
 /**
+ * Implements hook_entity_info_alter().
+ *
+ * TO DO: Patch core entities to have each provide its own values
+ */
+function reference_entity_info_alter(&$entity_info) {
+  $entity_info['node']['entity keys']['label'] = 'title';
+  $entity_info['node']['entity keys']['status'] = 'status';
+
+}
+
+/**
  * Implements hook_field_info().
  */
 function reference_field_info() {
