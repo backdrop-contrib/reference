@@ -116,3 +116,47 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
   );
   return $element;
 }
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function reference_field_formatter_info() {
+  return array(
+    'simple_link' => array(
+      'label' => t('Simple link'),
+      'field types' => array('reference'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function reference_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  switch ($display['type']) {
+    case 'simple_link':
+      foreach ($items as $delta => $target) {
+          $target_type_info = entity_get_info($target['target_type']);
+          $target_label_property = $target_type_info['entity keys']['label'];
+          $target_entity = entity_load($target['target_type'], $target['target_id']);
+          $element[] = array(
+            '#markup' => l(t($target_entity->$target_label_property), $target_entity->path['source']),
+          );
+      }
+    break;
+  }
+  return $element;
+}
+
+/**
+ * Helper function to get the bundle info for an entity type and turn it into an array for select options
+ */
+function _reference_entity_bundle_options($entity_type) {
+  $options = array();
+  $bundles = field_info_bundles($entity_type);
+  foreach ($bundles as $key => $info) {
+    $options[$key] = $info['label'];
+  }
+  return $options;
+}
