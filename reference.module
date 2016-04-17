@@ -51,7 +51,6 @@ function reference_field_settings_form($field, $instance, $has_data) {
     // '#element_validate' => array('form_validate_number'),
     '#default_value' => isset($settings['entity_type']) ? $settings['entity_type'] : '',
     );
-
   return $form;
 }
 
@@ -82,9 +81,10 @@ function reference_field_instance_settings_form($field, $instance) {
  * Implements hook_field_is_empty().
  */
 function reference_field_is_empty($item, $field) {
-
-  // TODO: Write a function to see if the field is empty
-    return TRUE;
+  if(empty($item['target_type']) && empty($item['target_id'])) {
+    return true;
+  }
+  return false;
 }
 
 
@@ -104,16 +104,15 @@ function reference_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $target_type = array(
+  $element['target_type'] = array(
     '#type' => 'textfield',
     '#description' => 'Entity type',
     '#default_value' => isset($items[$delta]['target_type']) ? $items[$delta]['target_type'] : '',
   );
-  $target_id = array(
+  $element['target_id'] = array(
     '#type' => 'textfield',
     '#description' => 'Entity id',
     '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : '',
   );
-  return array('target_type' => $target_type, 'target_id' => $target_id);
+  return $element;
 }
-
