@@ -70,7 +70,7 @@ function reference_field_instance_settings_form($field, $instance) {
  * Implements hook_field_is_empty().
  */
 function reference_field_is_empty($item, $field) {
-  if(empty($item['target_type']) && empty($item['target_id'])) {
+  if (empty($item['target_id'])) {
     return true;
   }
   return false;
