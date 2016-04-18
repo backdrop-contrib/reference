@@ -12,12 +12,12 @@ Defines a field type to let entities referencing other entites in Backdrop.
 * define a widget form in reference_field_widget_form (though not actually autocomplete yet)
 * define a simple link display formatter in reference_field_formatter_info
 * render a link to the referenced entity in reference_field_formatter_view
+* use a select list for the entity type in the widget that respect the type restriction
 
 ### Things to do:
 
 * allow more than one entity to be referenced by the field
 * switch from selecting one entity type in the settings, to limiting to one or more types
-* use a select list for the entity type in the widget that respect the type restriction
 * hide or disable entity type selector if only one entity type can be selected
 * update reference_entity_info_alter to provide info on all core entities
 * figure out which settings should be set for the field globally, for the instance, or both

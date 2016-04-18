@@ -93,8 +93,9 @@ function reference_field_widget_info() {
  */
 function reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $element['target_type'] = array(
-    '#type' => 'textfield',
+    '#type' => 'select',
     '#description' => 'Entity type',
+    '#options' => array($field['settings']['entity_type'] => entity_get_info($field['settings']['entity_type'])['label']),
     '#default_value' => isset($items[$delta]['target_type']) ? $items[$delta]['target_type'] : '',
   );
   $element['target_id'] = array(
