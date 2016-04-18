@@ -77,6 +77,24 @@ function reference_field_is_empty($item, $field) {
 }
 
 /**
+ * Implements hook_field_validate().
+ */
+function reference_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  foreach ($items as $delta => $item) {
+    // Only validate fields that aren't empty
+    if (!reference_field_is_empty($item, $field)) {
+      // Make sure the referenced entity exists
+      if(!entity_load($item['target_type'], $item['target_id'])) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'reference_exists',
+          'message' => t('%name: the referenced entity (%target_type %target_id) does not exist.', array('%name' => $instance['label'], '%target_type' => $item['target_type'], '%target_id' => $item['target_id'])),
+        );
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_field_widget_info().
  */
 function reference_field_widget_info() {
