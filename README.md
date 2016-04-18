@@ -15,20 +15,27 @@ Defines a field type to let entities referencing other entites in Backdrop.
 * use a select list for the entity type in the widget that respect the type restriction
 * field validation to make sure the referenced entity exists
 
+### In progress:
+
+* define automcomplete function to make autocomplete widget actually autocomplete
+* function to turn the autocomplete value to a numberic target id on form submit
+
 ### Things to do:
 
-* allow more than one entity to be referenced by the field
+* get autocomplete function to respect bundle and status restrictions
+* update field validation to test that the referenced entity meets restrictions
 * switch from selecting one entity type in the settings, to limiting to one or more types
 * hide or disable entity type selector if only one entity type can be selected
 * update reference_entity_info_alter to provide info on all core entities
 * figure out which settings should be set for the field globally, for the instance, or both
-* define automcomplete function to make autocomplete widget actually autocomplete
-* get autocomplete function to respect bundle and status restrictions
-* update field validation to test that the referenced entity meets restrictions
-* field formatter to display rendered entity
+* add js file for widget
+* clear entity id field if the entity type is changed
+* additional field formatter to display rendered entity
+* views integration
 * and many more...
 
 ### To merge into core:
 
+* write tests
 * patch core modules to provide their label and status properties in their entity info
 * remove unneeded reference_entity_info_alter() function
