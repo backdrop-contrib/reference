@@ -16,6 +16,18 @@ function reference_entity_info_alter(&$entity_info) {
 }
 
 /**
+ * Implements hook_menu().
+ */
+function reference_menu() {
+  $items['reference_autocomplete'] = array(
+    'page callback' => 'reference_autocomplete',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
  * Implements hook_field_info().
  */
 function reference_field_info() {
@@ -120,9 +132,39 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
     '#type' => 'textfield',
     '#description' => 'Entity id',
     '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : '',
+    '#autocomplete_path' => 'reference_autocomplete/' . $field['settings']['entity_type'],
   );
   return $element;
 }
+
+/**
+ * Callback for providing autocomplete values to the reference fields
+ */
+function reference_autocomplete($target_type = NULL, $typed = '') {
+  $matches = array();
+  if($target_type && $entity_info = entity_get_info($target_type)) {
+    $base_table = $entity_info['base table'];
+    $id_field = $entity_info['entity keys']['id'];
+    $label_field = $entity_info['entity keys']['label'];
+
+    $result = db_select($base_table, 'bt')
+      ->fields('bt', array($id_field, $label_field))
+      ->condition($label_field, '%' . db_like($typed) . '%', 'LIKE')
+      ->orderBy($label_field)
+      ->range(0, 10)
+      ->execute();
+
+    foreach ($result as $entity) {
+      $matches[$entity->{$id_field}] = check_plain($entity->{$label_field});
+    }
+  }
+  backdrop_json_output($matches);
+
+  //TO DO: Figure out why I need explicity call this, even though the echo in backdrop_json_output should disable the theme
+  module_invoke_all('exit');
+  exit();
+}
+
 
 /**
  * Implements hook_field_formatter_info().
