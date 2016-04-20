@@ -8,7 +8,7 @@
 /**
  * Implements hook_entity_info_alter().
  *
- * TO DO: Patch core entities to have each provide its own values
+ * TO DO: Patch core entities to have each provide its own values.
  */
 function reference_entity_info_alter(&$entity_info) {
   $entity_info['node']['entity keys']['label'] = 'title';
@@ -35,7 +35,11 @@ function reference_field_info() {
     'reference' => array(
       'label' => t('Reference'),
       'description' => t('Defines a field type for referencing other entites.'),
-      'instance_settings' => array('entity_type' => '', 'bundle' => '', 'status' => ''),
+      'instance_settings' => array(
+        'entity_type' => '',
+        'bundle' => '',
+        'status' => '',
+      ),
       'default_widget' => 'reference_autocomplete',
       'default_formatter' => 'simple_link',
     ),
@@ -83,9 +87,9 @@ function reference_field_instance_settings_form($field, $instance) {
  */
 function reference_field_is_empty($item, $field) {
   if (empty($item['target_id'])) {
-    return true;
+    return TRUE;
   }
-  return false;
+  return FALSE;
 }
 
 /**
@@ -93,13 +97,17 @@ function reference_field_is_empty($item, $field) {
  */
 function reference_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   foreach ($items as $delta => $item) {
-    // Only validate fields that aren't empty
+    // Only validate fields that aren't empty.
     if (!reference_field_is_empty($item, $field)) {
-      // Make sure the referenced entity exists
-      if(!entity_load($item['target_type'], $item['target_id'])) {
+      // Make sure the referenced entity exists.
+      if (!entity_load($item['target_type'], $item['target_id'])) {
         $errors[$field['field_name']][$langcode][$delta][] = array(
           'error' => 'reference_exists',
-          'message' => t('%name: the referenced entity (%target_type %target_id) does not exist.', array('%name' => $instance['label'], '%target_type' => $item['target_type'], '%target_id' => $item['target_id'])),
+          'message' => t('%name: the referenced entity (%target_type %target_id) does not exist.', array(
+            '%name' => $instance['label'],
+            '%target_type' => $item['target_type'],
+            '%target_id' => $item['target_id'],
+          )),
         );
       }
     }
@@ -138,11 +146,11 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
 }
 
 /**
- * Callback for providing autocomplete values to the reference fields
+ * Callback for providing autocomplete values to the reference fields.
  */
 function reference_autocomplete($target_type = NULL, $typed = '') {
   $matches = array();
-  if($target_type && $entity_info = entity_get_info($target_type)) {
+  if ($target_type && $entity_info = entity_get_info($target_type)) {
     $base_table = $entity_info['base table'];
     $id_field = $entity_info['entity keys']['id'];
     $label_field = $entity_info['entity keys']['label'];
@@ -160,11 +168,10 @@ function reference_autocomplete($target_type = NULL, $typed = '') {
   }
   backdrop_json_output($matches);
 
-  //TO DO: Figure out why I need explicity call this, even though the echo in backdrop_json_output should disable the theme
+  // TO DO: Why is the echo in backdrop_json_output not disabling the theme?
   module_invoke_all('exit');
   exit();
 }
-
 
 /**
  * Implements hook_field_formatter_info().
@@ -186,20 +193,20 @@ function reference_field_formatter_view($entity_type, $entity, $field, $instance
   switch ($display['type']) {
     case 'simple_link':
       foreach ($items as $delta => $target) {
-          $target_type_info = entity_get_info($target['target_type']);
-          $target_label_property = $target_type_info['entity keys']['label'];
-          $target_entity = entity_load($target['target_type'], $target['target_id']);
-          $element[] = array(
-            '#markup' => l(t($target_entity->$target_label_property), $target_entity->path['source']),
-          );
+        $target_type_info = entity_get_info($target['target_type']);
+        $target_label_property = $target_type_info['entity keys']['label'];
+        $target_entity = entity_load($target['target_type'], $target['target_id']);
+        $element[] = array(
+          '#markup' => l($target_entity->$target_label_property, $target_entity->path['source']),
+        );
       }
-    break;
+      break;
   }
   return $element;
 }
 
 /**
- * Helper function to get the entity types
+ * Helper: Get the entity types and return an option array.
  */
 function _reference_entity_options() {
   $options = array();
@@ -211,7 +218,7 @@ function _reference_entity_options() {
 }
 
 /**
- * Helper function to get the bundle info for an entity type and turn it into an array for select options
+ * Helper: Get the bundle info for an entity type and an option array.
  */
 function _reference_entity_bundle_options($entity_type) {
   $options = array();
