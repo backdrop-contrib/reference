@@ -36,6 +36,7 @@ Defines a field type to let entities referencing other entites in Backdrop.
 * clear entity id field if the entity type is changed
 * additional field formatter to display rendered entity
 * views integration
+* mutilingual support for label autocomplete
 * and many more...
 
 ### To merge into core:
