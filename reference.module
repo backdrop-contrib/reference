@@ -141,6 +141,7 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
     '#description' => 'Entity id',
     '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : '',
     '#autocomplete_path' => 'reference_autocomplete/' . $field['settings']['entity_type'],
+    '#element_validate' => array('reference_autocomplete_validate'),
   );
   return $element;
 }
@@ -163,7 +164,8 @@ function reference_autocomplete($target_type = NULL, $typed = '') {
       ->execute();
 
     foreach ($result as $entity) {
-      $matches[$entity->{$id_field}] = check_plain($entity->{$label_field});
+      $item = _reference_autocomplete_item_format($entity_info['label'], $entity->{$id_field}, $entity->{$label_field});
+      $matches[$item] = $item;
     }
   }
   backdrop_json_output($matches);
@@ -171,6 +173,39 @@ function reference_autocomplete($target_type = NULL, $typed = '') {
   // TO DO: Why is the echo in backdrop_json_output not disabling the theme?
   module_invoke_all('exit');
   exit();
+}
+
+function reference_autocomplete_validate($element, &$form_state, $form) {
+  if (!empty($element['#value'])) {
+    if ($id = _reference_autocomplete_item_extract_id($element['#value'])) {
+      form_set_value($element, $id, $form_state);
+    }
+    else {
+      form_set_value($element, "", $form_state);
+      form_error($element, t('The reference field value must contain a numeric id.'));
+    }
+  }
+}
+
+/**
+ * Helper function to turn the label and value into an autocomplete item
+ */
+function _reference_autocomplete_item_format($type, $id, $label) {
+  return $label . " (" . $type . " " . $id . ")";
+}
+
+/**
+ * Helper function to extract the entity id from an autocompleted item
+ */
+function _reference_autocomplete_item_extract_id($value) {
+  if (is_numeric($value)) {
+    return $value;
+  }
+  preg_match('/.*\(.* ([0-9]*)\)$/', $value, $matches);
+  if (isset($matches[1])) {
+    return $matches[1];
+  }
+  return false;
 }
 
 /**
