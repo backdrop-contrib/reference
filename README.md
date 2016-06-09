@@ -1,6 +1,8 @@
 # Reference
 Defines a field type to let entities referencing other entites in Backdrop.
 
+Note: this module is currently under development and should not be used on any production sites.
+
 ### Completed:
 
 * define the field in reference_field_info()
@@ -44,3 +46,4 @@ Defines a field type to let entities referencing other entites in Backdrop.
 * write tests
 * patch core modules to provide their label and status properties in their entity info
 * remove unneeded reference_entity_info_alter() function
+* replace references provided by other core modules, such as taxonomy tags and other term refs
