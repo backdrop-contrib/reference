@@ -142,6 +142,8 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
     '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : '',
     '#autocomplete_path' => 'reference_autocomplete/' . $field['settings']['entity_type'],
     '#element_validate' => array('reference_autocomplete_validate'),
+    '#value_callback' => 'reference_autocomplete_value',
+    '#default_target_type' => isset($items[$delta]['target_type']) ? $items[$delta]['target_type'] : null,
   );
   return $element;
 }
@@ -175,6 +177,9 @@ function reference_autocomplete($target_type = NULL, $typed = '') {
   exit();
 }
 
+/**
+ * Callback for to validate the values inserted into the field after autocompleting.
+ */
 function reference_autocomplete_validate($element, &$form_state, $form) {
   if (!empty($element['#value'])) {
     if ($id = _reference_autocomplete_item_extract_id($element['#value'])) {
@@ -188,10 +193,22 @@ function reference_autocomplete_validate($element, &$form_state, $form) {
 }
 
 /**
+ * Callback for turning a numeric value of a field into the autocomplete format.
+ */
+function reference_autocomplete_value($element, $input = FALSE, $form_state = array()) {
+  if(isset($element['#default_target_type']) && isset($element['#default_value'])) {
+    $target_type_info = entity_get_info($element['#default_target_type']);
+    $target_label_property = $target_type_info['entity keys']['label'];
+    $target_entity = entity_load($element['#default_target_type'], $element['#default_value']);
+    return _reference_autocomplete_item_format($element['#default_target_type'], $element['#default_value'], $target_entity->{$target_label_property});
+  }
+}
+
+/**
  * Helper function to turn the label and value into an autocomplete item
  */
 function _reference_autocomplete_item_format($type, $id, $label) {
-  return $label . " (" . $type . " " . $id . ")";
+  return $label . " (" . $id . ")";
 }
 
 /**
@@ -201,7 +218,7 @@ function _reference_autocomplete_item_extract_id($value) {
   if (is_numeric($value)) {
     return $value;
   }
-  preg_match('/.*\(.* ([0-9]*)\)$/', $value, $matches);
+  preg_match('/.*\(([0-9]*)\)$/', $value, $matches);
   if (isset($matches[1])) {
     return $matches[1];
   }

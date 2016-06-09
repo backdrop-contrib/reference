@@ -17,10 +17,11 @@ Note: this module is currently under development and should not be used on any p
 * use a select list for the entity type in the widget that respect the type restriction
 * field validation to make sure the referenced entity exists
 * define automcomplete function to make autocomplete widget actually autocomplete
+* function to turn the autocomplete value to a numberic target id on form submit
 
 ### In progress:
 
-* function to turn the autocomplete value to a numberic target id on form submit
+* check that entity exists in autocomplete validate
 
 ### Things to do:
 
@@ -29,6 +30,7 @@ Note: this module is currently under development and should not be used on any p
 * update field validation to test that the referenced entity meets restrictions
 * switch from selecting one entity type in the settings, to limiting to one or more types
 * hide or disable entity type selector if only one entity type can be selected
+* hide the numeric id from the user after autocomplete select?
 * add js file for widget
 * switch autocomplete path for entity_id when entity_type changes
 * autocomplete to get entity labels that start with the typed text before just containing
@@ -47,3 +49,4 @@ Note: this module is currently under development and should not be used on any p
 * patch core modules to provide their label and status properties in their entity info
 * remove unneeded reference_entity_info_alter() function
 * replace references provided by other core modules, such as taxonomy tags and other term refs
+* standardized autocomplete widget?
