@@ -16,7 +16,7 @@ function reference_entity_info_alter(&$entity_info) {
 }
 
 /**
- * Implements hook_menu().
+ * Implements hook_menu() to provide autocomplete callback.
  */
 function reference_menu() {
   $items['reference_autocomplete'] = array(
@@ -28,7 +28,7 @@ function reference_menu() {
 }
 
 /**
- * Implements hook_field_info().
+ * Implements hook_field_info() to define the reference field.
  */
 function reference_field_info() {
   return array(
@@ -47,7 +47,7 @@ function reference_field_info() {
 }
 
 /**
- * Implements hook_field_settings_form().
+ * Implements hook_field_settings_form() for setting the field options.
  */
 function reference_field_settings_form($field, $instance, $has_data) {
   $settings = $field['settings'];
@@ -62,7 +62,7 @@ function reference_field_settings_form($field, $instance, $has_data) {
 }
 
 /**
- * Implements hook_field_instance_settings_form().
+ * Implements hook_field_instance_settings_form() for setting instance options.
  */
 function reference_field_instance_settings_form($field, $instance) {
   $settings = $instance['settings'];
@@ -83,14 +83,38 @@ function reference_field_instance_settings_form($field, $instance) {
 }
 
 /**
- * Implements hook_field_is_empty().
+ * Helper: Get the entity types and return an option array.
+ */
+function _reference_entity_options() {
+  $options = array();
+  $entity_types = entity_get_info();
+  foreach ($entity_types as $key => $type) {
+    $options[$key] = $type['label'];
+  }
+  return $options;
+}
+
+/**
+ * Helper: Get the bundle info for an entity type and an option array.
+ */
+function _reference_entity_bundle_options($entity_type) {
+  $options = array();
+  $bundles = field_info_bundles($entity_type);
+  foreach ($bundles as $key => $info) {
+    $options[$key] = $info['label'];
+  }
+  return $options;
+}
+
+/**
+ * Implements hook_field_is_empty() so forms know if a field is empty.
  */
 function reference_field_is_empty($item, $field) {
   return empty($item['target_id']);
 }
 
 /**
- * Implements hook_field_validate().
+ * Implements hook_field_validate() so forms know if a field value is valid.
  */
 function reference_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   foreach ($items as $delta => $item) {
@@ -112,7 +136,7 @@ function reference_field_validate($entity_type, $entity, $field, $instance, $lan
 }
 
 /**
- * Implements hook_field_widget_info().
+ * Implements hook_field_widget_info() to define an autocomplete form widget.
  */
 function reference_field_widget_info() {
   return array(
@@ -124,7 +148,7 @@ function reference_field_widget_info() {
 }
 
 /**
- * Implements hook_field_widget_form().
+ * Implements hook_field_widget_form() to provide an autocomplete form widget .
  */
 function reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $element['target_type'] = array(
@@ -146,7 +170,7 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
 }
 
 /**
- * Callback for providing autocomplete values to the reference fields.
+ * Menu callback for providing autocomplete values to the reference fields.
  */
 function reference_autocomplete($target_type = NULL, $typed = '') {
   $matches = array();
@@ -175,7 +199,7 @@ function reference_autocomplete($target_type = NULL, $typed = '') {
 }
 
 /**
- * Callback for to validate the values inserted into the field after autocompleting.
+ * Form callback to validate the values inserted into the field after autocompleting.
  */
 function reference_autocomplete_validate($element, &$form_state, $form) {
   if (!empty($element['#value'])) {
@@ -190,7 +214,7 @@ function reference_autocomplete_validate($element, &$form_state, $form) {
 }
 
 /**
- * Callback for turning a numeric value of a field into the autocomplete format.
+ * Form callback for turning a numeric field value into an autocomplete format.
  */
 function reference_autocomplete_value($element, $input = FALSE, $form_state = array()) {
   if(isset($element['#default_target_type']) && isset($element['#default_value'])) {
@@ -202,28 +226,25 @@ function reference_autocomplete_value($element, $input = FALSE, $form_state = ar
 }
 
 /**
- * Helper function to turn the label and value into an autocomplete item
+ * Helper function to turn the label and value into an autocomplete item.
  */
 function _reference_autocomplete_item_format($type, $id, $label) {
   return $label . " (" . $id . ")";
 }
 
 /**
- * Helper function to extract the entity id from an autocompleted item
+ * Helper function to extract the entity id from an autocompleted item.
  */
 function _reference_autocomplete_item_extract_id($value) {
   if (is_numeric($value)) {
     return $value;
   }
   preg_match('/.*\(([0-9]*)\)$/', $value, $matches);
-  if (isset($matches[1])) {
-    return $matches[1];
-  }
-  return false;
+  return isset($matches[1]) ? $matches[1] : false;
 }
 
 /**
- * Implements hook_field_formatter_info().
+ * Implements hook_field_formatter_info() to register the field formatter.
  */
 function reference_field_formatter_info() {
   return array(
@@ -235,7 +256,7 @@ function reference_field_formatter_info() {
 }
 
 /**
- * Implements hook_field_formatter_view().
+ * Implements hook_field_formatter_view() to render the field for display.
  */
 function reference_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
@@ -252,28 +273,4 @@ function reference_field_formatter_view($entity_type, $entity, $field, $instance
       break;
   }
   return $element;
-}
-
-/**
- * Helper: Get the entity types and return an option array.
- */
-function _reference_entity_options() {
-  $options = array();
-  $entity_types = entity_get_info();
-  foreach ($entity_types as $key => $type) {
-    $options[$key] = $type['label'];
-  }
-  return $options;
-}
-
-/**
- * Helper: Get the bundle info for an entity type and an option array.
- */
-function _reference_entity_bundle_options($entity_type) {
-  $options = array();
-  $bundles = field_info_bundles($entity_type);
-  foreach ($bundles as $key => $info) {
-    $options[$key] = $info['label'];
-  }
-  return $options;
 }
