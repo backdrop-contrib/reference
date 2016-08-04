@@ -23,7 +23,7 @@ function reference_menu() {
     'page callback' => 'reference_autocomplete',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
-    'file' => 'includes/reference_autocomplete.inc'
+    'file' => 'includes/reference_autocomplete.field_widget.inc'
   );
   return $items;
 }
