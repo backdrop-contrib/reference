@@ -41,7 +41,7 @@ function reference_field_info() {
         'status' => '',
       ),
       'default_widget' => 'reference_autocomplete',
-      'default_formatter' => 'simple_link',
+      'default_formatter' => 'reference_link',
     ),
   );
 }
