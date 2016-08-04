@@ -51,6 +51,8 @@ Autocomple widget does not work, and needs to be changed to use new entity type 
 
 * write tests
 * patch core modules to provide their label and status properties in their entity info
-* remove unneeded reference_entity_info_alter() function
+* remove then-unneeded reference_entity_info_alter() function
 * replace references provided by other core modules, such as taxonomy tags and other term refs
+* upgrade path from taxonomy reference modules
+* upgrade path from contrib references to reference?
 * standardized autocomplete widget?
