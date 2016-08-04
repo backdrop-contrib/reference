@@ -3,6 +3,10 @@ Defines a field type to let entities referencing other entites in Backdrop.
 
 Note: this module is currently under development and should not be used on any production sites.
 
+### Current status:
+
+Autocomple widget does not work, and needs to be changed to use new entity type bundle combos.
+
 ### Completed:
 
 * define the field in reference_field_info()
@@ -18,26 +22,26 @@ Note: this module is currently under development and should not be used on any p
 * field validation to make sure the referenced entity exists
 * define automcomplete function to make autocomplete widget actually autocomplete
 * function to turn the autocomplete value to a numberic target id on form submit
+* switch to using entity type bundle combos that are allowed to be referenced
 
 ### In progress:
 
-* check that entity exists in autocomplete validate
+* add js file for widget
+* change autocomplete function to use new entity/bundle combo
+* switch autocomplete path for entity_id when entity_type changes
+* clear entity id field if the entity type is changed
 
 ### Things to do:
 
-* get autocomplete function to respect bundle and status restrictions
+* update reference_entity_info_alter to provide info on all core entities
+* check that entity exists in autocomplete validate
+* get autocomplete function to respect status restrictions
 * permissions on autocomplete callback to check that user has ability to edit the field
 * update field validation to test that the referenced entity meets restrictions
-* switch from selecting one entity type in the settings, to limiting to one or more types
 * hide or disable entity type selector if only one entity type can be selected
 * hide the numeric id from the user after autocomplete select?
-* add js file for widget
-* switch autocomplete path for entity_id when entity_type changes
 * autocomplete to get entity labels that start with the typed text before just containing
-* update reference_entity_info_alter to provide info on all core entities
 * error or watchdog when trying to reference an entity that hasn't defined its keys properly
-* figure out which settings should be set for the field globally, for the instance, or both
-* clear entity id field if the entity type is changed
 * additional field formatter to display rendered entity
 * views integration
 * mutilingual support for label autocomplete
