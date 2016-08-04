@@ -37,8 +37,7 @@ function reference_field_info() {
       'label' => t('Reference'),
       'description' => t('Defines a field type for referencing other entites.'),
       'instance_settings' => array(
-        'entity_type' => '',
-        'bundle' => '',
+        'entity_bundles' => '',
         'status' => '',
       ),
       'default_widget' => 'reference_autocomplete',
