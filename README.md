@@ -52,7 +52,11 @@ Autocomple widget does not work, and needs to be changed to use new entity type 
 * write tests
 * patch core modules to provide their label and status properties in their entity info
 * remove then-unneeded reference_entity_info_alter() function
+
+### Possible core changes:
 * replace references provided by other core modules, such as taxonomy tags and other term refs
 * upgrade path from taxonomy reference modules
-* upgrade path from contrib references to reference?
-* standardized autocomplete widget?
+* upgrade path from contrib references to reference
+* standardized autocomplete widget
+* file key for includes in hook_field_widget_info and hook_field_formatter_info
+* file key for includes in hook_field_info
