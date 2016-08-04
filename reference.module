@@ -65,35 +65,14 @@ function reference_field_instance_settings_form($field, $instance) {
     '#title' => t('Limit to published content'),
     '#default_value' => $settings['status'],
   );
-  $form['entity_types'] = array(
+  $form['entity_bundles'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Limit by entity types'),
-    '#options' => _reference_entity_options(),
-    '#multiple' => TRUE,
-    '#description' => t('Leave unchecked to allow all entity types to be referenced.'),
-    '#default_value' => isset($settings['entity_types']) ? $settings['entity_types'] : array(),
-  );
-  $form['bundles'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Limit by entity bundles'),
+    '#title' => t('Select the entity type bundles to be referenced'),
     '#options' => _reference_entity_bundle_options(),
     '#multiple' => TRUE,
-    '#description' => t('Leave unchecked to allow all entity type bundles to be referenced.'),
-    '#default_value' => isset($settings['bundles']) ? $settings['bundles'] : array(),
+    '#default_value' => isset($settings['entity_bundles']) ? $settings['entity_bundles'] : array(),
   );
   return $form;
-}
-
-/**
- * Helper: Get the entity types and return an option array.
- */
-function _reference_entity_options() {
-  $options = array();
-  $entity_types = entity_get_info();
-  foreach ($entity_types as $key => $type) {
-    $options[$key] = $type['label'];
-  }
-  return $options;
 }
 
 /**
@@ -102,10 +81,10 @@ function _reference_entity_options() {
 function _reference_entity_bundle_options() {
   $options = array();
   $entity_types = entity_get_info();
-  foreach ($entity_types as $key => $type) {
-    $bundles = field_info_bundles($key);
-    foreach ($bundles as $key => $info) {
-      $options[$key] = $type['label'] . ": " . $info['label'];
+  foreach ($entity_types as $entity_type => $entity_info) {
+    $bundles = field_info_bundles($entity_type);
+    foreach ($bundles as $bundle_type => $bundle_info) {
+      $options[$entity_type . '-' . $bundle_type] = $entity_info['label'] . ": " . $bundle_info['label'];
     }
   }
   return $options;
@@ -159,7 +138,7 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
   $element['target_type'] = array(
     '#type' => 'select',
     '#description' => 'Entity type',
-    '#options' => array($field['settings']['entity_type'] => entity_get_info($field['settings']['entity_type'])['label']),
+    '#options' => _reference_widget_entity_type_options($instance),
     '#default_value' => isset($items[$delta]['target_type']) ? $items[$delta]['target_type'] : '',
   );
   $element['target_id'] = array(
@@ -172,6 +151,21 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
     '#default_target_type' => isset($items[$delta]['target_type']) ? $items[$delta]['target_type'] : null,
   );
   return $element;
+}
+
+/**
+ * Helper to get the entities types allowed to be referenced by a field.
+ */
+function _reference_widget_entity_type_options($instance) {
+  $options = array();
+  $entity_info = entity_get_info();
+  foreach ($instance['settings']['entity_bundles'] as $entity_bundle => $enabled) {
+    if($enabled) {
+      list($entity_type, $bundle) = explode('-', $entity_bundle);
+      $options[$entity_bundle] = $entity_info[$entity_type]['bundles'][$bundle]['label'];
+    }
+  }
+  return $options;
 }
 
 /**
