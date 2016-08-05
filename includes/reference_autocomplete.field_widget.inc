@@ -18,6 +18,12 @@ function reference_autocomplete_widget_form(&$form, &$form_state, $field, $insta
     '#description' => 'Type',
     '#options' => $entity_bundle_options,
     '#default_value' => $entity_bundle_default,
+    '#attributes' => array(
+      'class' => array('reference-autocomplete-select'),
+    ),
+    '#attached' => array(
+      'js' => array(drupal_get_path('module', 'reference') . '/js/reference_autocomplete.js'),
+    ),
   );
   $element['target_id'] = array(
     '#type' => 'textfield',
