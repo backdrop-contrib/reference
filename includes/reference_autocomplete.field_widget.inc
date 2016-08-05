@@ -9,20 +9,23 @@
  * Called from reference_field_widget_form() to provide an autocomplete form widget .
  */
 function reference_autocomplete_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $element['target_type'] = array(
+
+  $entity_bundle_options = reference_autocomplete_entity_bundle_options($instance);
+  $entity_bundle_default = isset($items[$delta]['entity_bundle']) ? $items[$delta]['entity_bundle'] : key($entity_bundle_options);
+
+  $element['entity_bundle'] = array(
     '#type' => 'select',
-    '#description' => 'Entity type',
-    '#options' => reference_autocomplete_entity_type_options($instance),
-    '#default_value' => isset($items[$delta]['target_type']) ? $items[$delta]['target_type'] : '',
+    '#description' => 'Type',
+    '#options' => $entity_bundle_options,
+    '#default_value' => $entity_bundle_default,
   );
   $element['target_id'] = array(
     '#type' => 'textfield',
-    '#description' => 'Entity id',
+    '#description' => 'Entity',
     '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : '',
-    '#autocomplete_path' => 'reference_autocomplete/' . $field['settings']['entity_type'],
+    '#autocomplete_path' => 'reference_autocomplete/' . $entity_bundle_default,
     '#element_validate' => array('reference_autocomplete_validate'),
     '#value_callback' => 'reference_autocomplete_value',
-    '#default_target_type' => isset($items[$delta]['target_type']) ? $items[$delta]['target_type'] : null,
   );
   return $element;
 }
@@ -30,7 +33,7 @@ function reference_autocomplete_widget_form(&$form, &$form_state, $field, $insta
 /**
  * Helper to get the entities types allowed to be referenced by a field.
  */
-function reference_autocomplete_entity_type_options($instance) {
+function reference_autocomplete_entity_bundle_options($instance) {
   $options = array();
   $entity_info = entity_get_info();
   foreach ($instance['settings']['entity_bundles'] as $entity_bundle => $enabled) {
