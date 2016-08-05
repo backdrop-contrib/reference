@@ -23,21 +23,22 @@ Autocomple widget does not work, and needs to be changed to use new entity type 
 * define automcomplete function to make autocomplete widget actually autocomplete
 * function to turn the autocomplete value to a numberic target id on form submit
 * switch to using entity type bundle combos that are allowed to be referenced
-
-### In progress:
-
 * add js file for widget
-* change autocomplete function to use new entity/bundle combo
 * switch autocomplete path for entity_id when entity_type changes
 * clear entity id field if the entity type is changed
 
+### In progress:
+
+* change autocomplete function to use new entity/bundle combo
+* update reference_entity_info_alter to provide info on all core entities
+
 ### Things to do:
 
-* update reference_entity_info_alter to provide info on all core entities
 * check that entity exists in autocomplete validate
 * get autocomplete function to respect status restrictions
 * permissions on autocomplete callback to check that user has ability to edit the field
 * update field validation to test that the referenced entity meets restrictions
+* behaviour for when an extisting target is no longer an allowed entity bundle
 * hide or disable entity type selector if only one entity type can be selected
 * hide the numeric id from the user after autocomplete select?
 * autocomplete to get entity labels that start with the typed text before just containing
