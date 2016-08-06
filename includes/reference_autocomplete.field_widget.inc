@@ -59,19 +59,23 @@ function reference_autocomplete($entity_bundle = NULL, $typed = '') {
   list($entity_type, $bundle) = explode('-', $entity_bundle);
   if ($entity_bundle && $entity_info = entity_get_info($entity_type)) {
     $base_table = $entity_info['base table'];
-    $id_field = $entity_info['entity keys']['id'];
-    $label_field = $entity_info['entity keys']['label'];
+    $keys = $entity_info['entity keys'];
 
-    $result = db_select($base_table, 'bt')
-      ->fields('bt', array($id_field, $label_field))
-      ->condition($label_field, '%' . db_like($typed) . '%', 'LIKE')
-      ->condition('type', $bundle, '=')
-      ->orderBy($label_field)
-      ->range(0, 10)
-      ->execute();
+    $query = db_select($base_table, 'bt')
+      ->fields('bt', array($keys['id'], $keys['label']))
+      ->condition($keys['label'], '%' . db_like($typed) . '%', 'LIKE')
+      ->orderBy($keys['label'])
+      ->range(0, 10);
+
+    // This check is needed because file enties don't have a bundle (yet).
+    if ($keys['bundle']) {
+      $query->condition($keys['bundle'], $bundle, '=');
+    }
+
+    $result = $query->execute();
 
     foreach ($result as $entity) {
-      $item = reference_autocomplete_item_format($entity_info['label'], $entity->{$id_field}, $entity->{$label_field});
+      $item = reference_autocomplete_item_format($entity_info['label'], $entity->{$keys['id']}, $entity->{$keys['label']});
       $matches[$item] = $item;
     }
   }

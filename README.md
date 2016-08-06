@@ -27,10 +27,11 @@ Autocomple widget does not work, and needs to be changed to use new entity type 
 * switch autocomplete path for entity_id when entity_type changes
 * clear entity id field if the entity type is changed
 * update reference_entity_info_alter to provide info on all core content entities
+* change autocomplete function to use new entity/bundle combo
 
 ### In progress:
 
-* change autocomplete function to use new entity/bundle combo
+* Get entity save and load to properly deal with entity-bundle combo.
 
 ### Things to do:
 
@@ -56,6 +57,7 @@ Autocomple widget does not work, and needs to be changed to use new entity type 
 * remove then-unneeded reference_entity_info_alter() function
 
 ### Possible core changes:
+* add bundles for file entities
 * replace references provided by other core modules, such as taxonomy tags and other term refs
 * upgrade path from taxonomy reference modules
 * upgrade path from contrib references to reference
