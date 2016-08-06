@@ -28,9 +28,11 @@ Autocomple widget does not work, and needs to be changed to use new entity type 
 * clear entity id field if the entity type is changed
 * update reference_entity_info_alter to provide info on all core content entities
 * change autocomplete function to use new entity/bundle combo
+* unbind first autocomplete event when create a new one
 
 ### In progress:
 
+* autocomplete callback failing for comment types
 * Get entity save and load to properly deal with entity-bundle combo.
 
 ### Things to do:
