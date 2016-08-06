@@ -26,16 +26,17 @@ Autocomple widget does not work, and needs to be changed to use new entity type 
 * add js file for widget
 * switch autocomplete path for entity_id when entity_type changes
 * clear entity id field if the entity type is changed
+* update reference_entity_info_alter to provide info on all core content entities
 
 ### In progress:
 
 * change autocomplete function to use new entity/bundle combo
-* update reference_entity_info_alter to provide info on all core entities
 
 ### Things to do:
 
 * check that entity exists in autocomplete validate
 * get autocomplete function to respect status restrictions
+* figure out how to deal with comment status being reversed
 * permissions on autocomplete callback to check that user has ability to edit the field
 * update field validation to test that the referenced entity meets restrictions
 * behaviour for when an extisting target is no longer an allowed entity bundle

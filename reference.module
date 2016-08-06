@@ -11,8 +11,15 @@
  * TO DO: Patch core entities to have each provide its own values.
  */
 function reference_entity_info_alter(&$entity_info) {
+  $entity_info['comment']['entity keys']['label'] = 'subject';
+  $entity_info['comment']['entity keys']['status'] = 'status';
+  $entity_info['file']['entity keys']['label'] = 'filename';
+  $entity_info['file']['entity keys']['status'] = 'status';
   $entity_info['node']['entity keys']['label'] = 'title';
   $entity_info['node']['entity keys']['status'] = 'status';
+  $entity_info['taxonomy_term']['entity keys']['label'] = 'name';
+  $entity_info['user']['entity keys']['label'] = 'name';
+  $entity_info['user']['entity keys']['status'] = 'status';
 }
 
 /**
