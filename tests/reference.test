@@ -1,0 +1,54 @@
+<?php
+/**
+ * @file
+ * Tests for file.module.
+ */
+
+/**
+ * Provides methods specifically for testing File module's field handling.
+ */
+class ReferenceFieldTestCase extends BackdropWebTestCase {
+  protected $admin_user;
+
+  function setUp() { 
+    // Since this is a base class for many test cases, support the same
+    // flexibility that BackdropWebTestCase::setUp() has for the modules to be
+    // passed in as either an array or a variable number of string arguments.
+    $modules = func_get_args();
+    if (isset($modules[0]) && is_array($modules[0])) {
+      $modules = $modules[0];
+    }
+    $modules[] = 'reference';
+    $modules[] = 'comment';
+    $modules[] = 'file';
+    $modules[] = 'taxonomy';
+    parent::setUp($modules);
+  }
+
+
+  /**
+   * Make a request to the reference autocomplete url and get results.
+   *
+   * @param $entity_bundle
+   *   An entity_type/bundle combination.
+   * @param $typed
+   *   The text that the user has typed.
+   */
+  protected function referenceAutocompleteRequest($entity_bundle, $typed = '') {
+    return $this->backdropGet('reference_autocomplete/' . $entity_bundle . '/' . $typed);
+  }
+
+  /**
+   * Simply accesses the autocomplete callback for each entity/bundle.
+   */
+  public function testReferenceAutocompleteEmpty() {
+    $entity_types = entity_get_info();
+    foreach($entity_types as $entity_type => $entity_info) {
+      foreach($entity_info['bundles'] as $bundle => $bundle_info) {
+        $output = $this->referenceAutocompleteRequest($entity_type . '-' . $bundle);
+        $json = backdrop_json_decode($output);
+        $this->assertNotNull($json, 'JSON is returned for the "' . $entity_type . '" entity type "' . $bundle . '" bundle.');
+      }
+    }
+  }
+}

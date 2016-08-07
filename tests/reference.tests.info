@@ -1,0 +1,5 @@
+[ReferenceFieldTestCase]
+name = Reference field test
+description = Tests for the reference field.
+group = Reference
+file = reference.test
