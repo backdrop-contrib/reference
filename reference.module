@@ -90,6 +90,17 @@ function _reference_entity_bundle_options() {
   $entity_types = entity_get_info();
   foreach ($entity_types as $entity_type => $entity_info) {
     $bundles = field_info_bundles($entity_type);
+
+    // Bundles aren't stored in the commnent table, so they can't be filtered.
+    // See: https://github.com/backdrop/backdrop-issues/issues/2046
+    if ($entity_type == 'comment') {
+      $bundles = array(
+        'comment' => array(
+          'label' => "Comment",
+        ),
+      );
+    }
+
     foreach ($bundles as $bundle_type => $bundle_info) {
       $options[$entity_type . '-' . $bundle_type] = $entity_info['label'] . ": " . $bundle_info['label'];
     }
