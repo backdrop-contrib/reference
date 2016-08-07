@@ -46,6 +46,12 @@ function reference_autocomplete_entity_bundle_options($instance) {
     if($enabled) {
       list($entity_type, $bundle) = explode('-', $entity_bundle);
       $options[$entity_bundle] = $entity_info[$entity_type]['bundles'][$bundle]['label'];
+
+      // We can't filter comments by bundle.
+      // See: https://github.com/backdrop/backdrop-issues/issues/2046
+      if($entity_type == 'comment') {
+         $options[$entity_bundle] = "Comment";
+      }
     }
   }
   return $options;
