@@ -67,8 +67,8 @@ function reference_autocomplete($entity_bundle = NULL, $typed = '') {
       ->orderBy($keys['label'])
       ->range(0, 10);
 
-    // This check is needed because file enties don't have a bundle (yet).
-    if ($keys['bundle']) {
+    // This check is needed because file and comment enties don't have a bundle (yet).
+    if ($keys['bundle'] && $entity_type != 'comment') {
       $query->condition($keys['bundle'], $bundle, '=');
     }
 
