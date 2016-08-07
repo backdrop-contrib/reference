@@ -102,7 +102,11 @@ function _reference_entity_bundle_options() {
     }
 
     foreach ($bundles as $bundle_type => $bundle_info) {
-      $options[$entity_type . '-' . $bundle_type] = $entity_info['label'] . ": " . $bundle_info['label'];
+      $label = $entity_info['label'];
+      if (sizeof($bundles) > 1 || $entity_info['label'] != $bundle_info['label']) {
+        $label .= ": " . $bundle_info['label'];
+      }
+      $options[$entity_type . '-' . $bundle_type] = $label;
     }
   }
   return $options;
