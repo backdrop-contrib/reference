@@ -1,11 +1,9 @@
 # Reference
 Defines a field type to let entities referencing other entites in Backdrop.
 
-Note: this module is currently under development and should not be used on any production sites.
-
 ### Current status:
 
-Autocomple widget does not work, and needs to be changed to use new entity type bundle combos.
+This module is currently under development and should not be used on any production sites.
 
 ### Completed:
 
@@ -32,15 +30,15 @@ Autocomple widget does not work, and needs to be changed to use new entity type 
 
 ### In progress:
 
-* autocomplete callback failing for comment types
-* Get entity save and load to properly deal with entity-bundle combo.
+* Switch to allowing only a single entity type as the field target.
 
 ### Things to do:
 
+* autocomplete callback failing for comment types
 * check that entity exists in autocomplete validate
 * get autocomplete function to respect status restrictions
-* figure out how to deal with comment status being reversed
 * permissions on autocomplete callback to check that user has ability to edit the field
+* add access check to the entity info so user can only select content they can access
 * update field validation to test that the referenced entity meets restrictions
 * behaviour for when an extisting target is no longer an allowed entity bundle
 * hide or disable entity type selector if only one entity type can be selected
