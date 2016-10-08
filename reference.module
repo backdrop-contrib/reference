@@ -80,50 +80,28 @@ function reference_field_settings_form($field, $instance, $has_data) {
  * Implements hook_field_instance_settings_form() for setting instance options.
  */
 function reference_field_instance_settings_form($field, $instance) {
-  $settings = $instance['settings'];
+  // Determine the options for the entity bundles selection.
+  $bundles_options = array();
+  $entity_type_info = entity_get_info($field['settings']['entity_type']);
+  foreach ($entity_type_info['bundles'] as $bundle => $bundle_info) {
+    $bundles_options[$bundle] = $bundle_info['label'];
+  }
+  // Build the field instance setting form.
+  $form = array();
   $form['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('Limit to published content'),
-    '#default_value' => $settings['status'],
+    '#default_value' =>  $instance['settings']['status'],
   );
-  $form['entity_bundles'] = array(
+  $form['bundles'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Select the entity type bundles to be referenced'),
-    '#options' => _reference_entity_bundle_options(),
+    '#title' => t('Allowed bundles'),
+    '#description' => t('Leave unchecked to allow all bundles to be referenced.'),
+    '#options' => $bundles_options,
     '#multiple' => TRUE,
-    '#default_value' => isset($settings['entity_bundles']) ? $settings['entity_bundles'] : array(),
+    '#default_value' =>  $instance['settings']['bundles'],
   );
   return $form;
-}
-
-/**
- * Helper: Get the bundle info for an entity type and an option array.
- */
-function _reference_entity_bundle_options() {
-  $options = array();
-  $entity_types = entity_get_info();
-  foreach ($entity_types as $entity_type => $entity_info) {
-    $bundles = field_info_bundles($entity_type);
-
-    // Bundles aren't stored in the commnent table, so they can't be filtered.
-    // See: https://github.com/backdrop/backdrop-issues/issues/2046
-    if ($entity_type == 'comment') {
-      $bundles = array(
-        'comment' => array(
-          'label' => "Comment",
-        ),
-      );
-    }
-
-    foreach ($bundles as $bundle_type => $bundle_info) {
-      $label = $entity_info['label'];
-      if (sizeof($bundles) > 1 || $entity_info['label'] != $bundle_info['label']) {
-        $label .= ": " . $bundle_info['label'];
-      }
-      $options[$entity_type . '-' . $bundle_type] = $label;
-    }
-  }
-  return $options;
 }
 
 /**
