@@ -5,32 +5,10 @@ Defines a field type to let entities referencing other entites in Backdrop.
 
 This module is currently under development and should not be used on any production sites.
 
-### Completed:
-
-* define the field in reference_field_info()
-* define the field schema in reference_field_schema()
-* alter node entity info to provide its label and status properties
-* create global and instace settings forms for the field
-* define reference_field_is_empty() to check whether the field is filled in or not
-* define a reference_autocomplete widget in hook_field_widget_info
-* define a widget form in reference_field_widget_form (though not actually autocomplete yet)
-* define a simple link display formatter in reference_field_formatter_info
-* render a link to the referenced entity in reference_field_formatter_view
-* use a select list for the entity type in the widget that respect the type restriction
-* field validation to make sure the referenced entity exists
-* define automcomplete function to make autocomplete widget actually autocomplete
-* function to turn the autocomplete value to a numberic target id on form submit
-* switch to using entity type bundle combos that are allowed to be referenced
-* add js file for widget
-* switch autocomplete path for entity_id when entity_type changes
-* clear entity id field if the entity type is changed
-* update reference_entity_info_alter to provide info on all core content entities
-* change autocomplete function to use new entity/bundle combo
-* unbind first autocomplete event when create a new one
-
 ### In progress:
 
-* Switch to allowing only a single entity type as the field target.
+* Fix field validate to only use single entity type.
+* Fix autocomplete widget to use field details instead of entity type and bundle.
 
 ### Things to do:
 
@@ -50,6 +28,15 @@ This module is currently under development and should not be used on any product
 * mutilingual support for label autocomplete
 * and many more...
 
+### Test to write: ###
+
+* create reference field
+* select entity type on the settings form
+* entity type select disabled after field has data
+* autocomplete callback reads field settings properly
+* autocomplete respects bundle
+* autocomplete respects status
+
 ### To merge into core:
 
 * write tests
@@ -58,6 +45,7 @@ This module is currently under development and should not be used on any product
 
 ### Possible core changes:
 * add bundles for file entities
+* add plural for bundle labels
 * replace references provided by other core modules, such as taxonomy tags and other term refs
 * upgrade path from taxonomy reference modules
 * upgrade path from contrib references to reference
