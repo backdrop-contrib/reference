@@ -60,10 +60,17 @@ function reference_field_info() {
  * Implements hook_field_settings_form() for setting the field options.
  */
 function reference_field_settings_form($field, $instance, $has_data) {
+  // Find all available entity types to allow one to be selected.
   $entity_type_options = array();
   foreach (entity_get_info() as $entity_type => $entity_type_info) {
-    $entity_type_options[$entity_type] = $entity_type_info['label'];
+    // Ensure that the entity type has registered its label entity key.
+    if (isset($entity_type_info['entity keys']['label'])) {
+      $entity_type_options[$entity_type] = $entity_type_info['label'];
+    } else {
+      backdrop_set_message(t("The @entity entity type has not declared its label attribute and cannot be referenced.", array('@entity' => $entity_type_info['label'])), 'warning');
+    }
   }
+  // Build the field settings form.
   $form = array();
   $form['entity_type'] = array(
     '#type' => 'select',
@@ -92,6 +99,9 @@ function reference_field_instance_settings_form($field, $instance) {
     '#type' => 'checkbox',
     '#title' => t('Limit to published content'),
     '#default_value' =>  $instance['settings']['status'],
+    // Ensure that the entity type has registered its status entity info key.
+    '#disabled' => !isset($entity_type_info['entity keys']['status']),
+    '#description' => !isset($entity_type_info['entity keys']['status']) ? t("Notice: This entity type has not declared its status attribute.") : '',
   );
   $form['bundles'] = array(
     '#type' => 'checkboxes',
