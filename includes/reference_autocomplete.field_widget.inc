@@ -9,52 +9,14 @@
  * Called from reference_field_widget_form() to provide an autocomplete form widget .
  */
 function reference_autocomplete_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-
-  $entity_bundle_options = reference_autocomplete_entity_bundle_options($instance);
-  $entity_bundle_default = isset($items[$delta]['entity_bundle']) ? $items[$delta]['entity_bundle'] : key($entity_bundle_options);
-
-  $element['entity_bundle'] = array(
-    '#type' => 'select',
-    '#description' => 'Type',
-    '#options' => $entity_bundle_options,
-    '#default_value' => $entity_bundle_default,
-    '#attributes' => array(
-      'class' => array('reference-autocomplete-select'),
-    ),
-    '#attached' => array(
-      'js' => array(drupal_get_path('module', 'reference') . '/js/reference_autocomplete.js'),
-    ),
-  );
   $element['target_id'] = array(
     '#type' => 'textfield',
-    '#description' => 'Entity',
     '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : '',
-    '#autocomplete_path' => 'reference_autocomplete/' . $entity_bundle_default,
+    '#autocomplete_path' => 'reference_autocomplete/' . $instance['field_name'] . '-' . $instance['entity_type'] . '-' . $instance['bundle'],
     '#element_validate' => array('reference_autocomplete_validate'),
     '#value_callback' => 'reference_autocomplete_value',
   );
   return $element;
-}
-
-/**
- * Helper to get the entities types allowed to be referenced by a field.
- */
-function reference_autocomplete_entity_bundle_options($instance) {
-  $options = array();
-  $entity_info = entity_get_info();
-  foreach ($instance['settings']['entity_bundles'] as $entity_bundle => $enabled) {
-    if($enabled) {
-      list($entity_type, $bundle) = explode('-', $entity_bundle);
-      $options[$entity_bundle] = $entity_info[$entity_type]['bundles'][$bundle]['label'];
-
-      // We can't filter comments by bundle.
-      // See: https://github.com/backdrop/backdrop-issues/issues/2046
-      if($entity_type == 'comment') {
-         $options[$entity_bundle] = "Comment";
-      }
-    }
-  }
-  return $options;
 }
 
 /**
