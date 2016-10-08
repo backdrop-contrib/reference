@@ -11,12 +11,6 @@
 function reference_field_schema($field) {
   return array(
     'columns' => array(
-      'target_type' => array(
-        'description' => 'The entity type of the target entity.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-      ),
       'target_id' => array(
         'description' => 'The entity id of the target entity.',
         'type' => 'int',
@@ -25,7 +19,7 @@ function reference_field_schema($field) {
       ),
     ),
     'indexes' => array(
-      'target' => array('target_type', 'target_id'),
+      'target' => array('target_id'),
     ),
   );
 }
