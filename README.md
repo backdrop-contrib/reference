@@ -7,10 +7,12 @@ This module is currently under development and should not be used on any product
 
 ### In progress:
 
-* moving autocomplete widget to its own separate submodule.
+* figure out why changing the field value doesn't make change on save
 
 ### Things to do:
 
+* do we really want to use a value_callback to set the default value?
+* what happens if you feed it a bad id number
 * figure out proper way to set widget title so it isn't repeated with multiple values.
 * make sure that a default value can be set in the field instance settings form
 * check that entity exists in autocomplete validate
@@ -32,6 +34,10 @@ This module is currently under development and should not be used on any product
 * autocomplete callback reads field settings properly
 * autocomplete respects bundle
 * autocomplete respects status
+* feeding a bad id number
+* changing an existing field value
+* display value on entity view
+* required field cannot be blank
 
 ### To merge into core:
 
