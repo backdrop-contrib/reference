@@ -68,7 +68,7 @@ function reference_autocomplete($field_instance = NULL, $typed = '') {
   $result = $query->execute();
   $matches = array();
   foreach ($result as $entity) {
-    $item = reference_autocomplete_item_format($entity_info['label'], $entity->{$keys['id']}, $entity->{$keys['label']});
+    $item = reference_autocomplete_item_format($entity->{$keys['id']}, $entity->{$keys['label']});
     $matches[$item] = $item;
   }
   backdrop_json_output($matches);
@@ -101,14 +101,14 @@ function reference_autocomplete_value($element, $input = FALSE, $form_state = ar
     $target_type_info = entity_get_info($element['#default_target_type']);
     $target_label_property = $target_type_info['entity keys']['label'];
     $target_entity = entity_load($element['#default_target_type'], $element['#default_value']);
-    return reference_autocomplete_item_format($element['#default_target_type'], $element['#default_value'], $target_entity->{$target_label_property});
+    return reference_autocomplete_item_format($element['#default_value'], $target_entity->{$target_label_property});
   }
 }
 
 /**
  * Helper function to turn the label and value into an autocomplete item.
  */
-function reference_autocomplete_item_format($type, $id, $label) {
+function reference_autocomplete_item_format($id, $label) {
   return $label . " (" . $id . ")";
 }
 
