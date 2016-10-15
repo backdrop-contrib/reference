@@ -25,30 +25,51 @@ function reference_autocomplete_widget_form(&$form, &$form_state, $field, $insta
 /**
  * Menu callback for providing autocomplete values to the reference fields.
  */
-function reference_autocomplete($entity_bundle = NULL, $typed = '') {
+function reference_autocomplete($field_instance = NULL, $typed = '') {
+
+  // Get the info for the field and instance that is being autocompleted.
+  list($field_name, $entity_type, $bundle) = explode('-', $field_instance);
+  $field_info = field_info_field($field_name);
+  $field_instance_info = field_info_instance($entity_type, $field_name, $bundle);
+
+  // Determine our target entity parameters based on the field settings.
+  $target_entity_type = $field_info['settings']['entity_type'];
+  $target_entity_status = $field_instance_info['settings']['status'];
+  $target_entity_bundles = array();
+  foreach ($field_instance_info['settings']['bundles'] as $bundle => $active) {
+    if ($active) {
+      $target_entity_bundles[] = $bundle;
+    }
+  }
+
+  // Get the database table info for the target entity type.
+  $entity_info = entity_get_info($target_entity_type);
+  $base_table = $entity_info['base table'];
+  $keys = $entity_info['entity keys'];
+
+  // Build the query of our base table using the text that has been typed in .
+  $query = db_select($base_table, 'bt')
+    ->fields('bt', array($keys['id'], $keys['label']))
+    ->condition($keys['label'], '%' . db_like($typed) . '%', 'LIKE')
+    ->orderBy($keys['label'])
+    ->range(0, 10);
+
+  // Add a condition if we are limiting the bundles returned.
+  if ($target_entity_bundles) {
+    $query->condition($keys['bundle'], $target_entity_bundles,'IN');
+  }
+
+  // Add a condition if we are limiting results to published content.
+  if ($target_entity_status) {
+    $query->condition($keys['status'], 1,'=');
+  }
+
+  // Execute the query, format the results, and output as JSON.
+  $result = $query->execute();
   $matches = array();
-  list($entity_type, $bundle) = explode('-', $entity_bundle);
-  if ($entity_bundle && $entity_info = entity_get_info($entity_type)) {
-    $base_table = $entity_info['base table'];
-    $keys = $entity_info['entity keys'];
-
-    $query = db_select($base_table, 'bt')
-      ->fields('bt', array($keys['id'], $keys['label']))
-      ->condition($keys['label'], '%' . db_like($typed) . '%', 'LIKE')
-      ->orderBy($keys['label'])
-      ->range(0, 10);
-
-    // This check is needed because file and comment enties don't have a bundle (yet).
-    if ($keys['bundle'] && $entity_type != 'comment') {
-      $query->condition($keys['bundle'], $bundle, '=');
-    }
-
-    $result = $query->execute();
-
-    foreach ($result as $entity) {
-      $item = reference_autocomplete_item_format($entity_info['label'], $entity->{$keys['id']}, $entity->{$keys['label']});
-      $matches[$item] = $item;
-    }
+  foreach ($result as $entity) {
+    $item = reference_autocomplete_item_format($entity_info['label'], $entity->{$keys['id']}, $entity->{$keys['label']});
+    $matches[$item] = $item;
   }
   backdrop_json_output($matches);
 
