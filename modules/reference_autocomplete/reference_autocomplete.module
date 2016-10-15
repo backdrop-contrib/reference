@@ -30,6 +30,8 @@ function reference_autocomplete_field_widget_form(&$form, &$form_state, $field, 
     '#autocomplete_path' => 'reference_autocomplete/' . $instance['field_name'] . '-' . $instance['entity_type'] . '-' . $instance['bundle'],
     '#element_validate' => array('reference_autocomplete_validate'),
     '#value_callback' => 'reference_autocomplete_value',
+    // Store the entity type so it can be used in the value callback.
+    '#settings_entity_type' => $field['settings']['entity_type'],
   );
   return $element;
 }
@@ -121,10 +123,11 @@ function reference_autocomplete_validate($element, &$form_state, $form) {
  * Form callback for turning a numeric field value into an autocomplete format.
  */
 function reference_autocomplete_value($element, $input = FALSE, $form_state = array()) {
-  if(isset($element['#default_target_type']) && isset($element['#default_value'])) {
-    $target_type_info = entity_get_info($element['#default_target_type']);
+  if(isset($element['#settings_entity_type']) && isset($element['#default_value'])) {
+    $target_type = $element['#settings_entity_type'];
+    $target_type_info = entity_get_info($target_type);
     $target_label_property = $target_type_info['entity keys']['label'];
-    $target_entity = entity_load($element['#default_target_type'], $element['#default_value']);
+    $target_entity = entity_load($target_type, $element['#default_value']);
     return reference_autocomplete_item_format($element['#default_value'], $target_entity->{$target_label_property});
   }
 }
