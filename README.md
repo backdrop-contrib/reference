@@ -11,6 +11,8 @@ This module is currently under development and should not be used on any product
 
 ### Things to do:
 
+* figure out proper way to set widget title so it isn't repeated with multiple values.
+* make sure that a default value can be set in the field instance settings form
 * check that entity exists in autocomplete validate
 * update field validation to test that the referenced entity meets current restrictions
 * access check on autocomplete callback to check that user has ability to edit the field
