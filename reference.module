@@ -96,7 +96,7 @@ function reference_field_instance_settings_form($field, $instance) {
     '#description' => t('Leave unchecked to allow all bundles to be referenced.'),
     '#options' => $bundles_options,
     '#multiple' => TRUE,
-    '#default_value' =>  $instance['settings']['bundles'],
+    '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
   );
   return $form;
 }
