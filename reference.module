@@ -116,12 +116,12 @@ function reference_field_validate($entity_type, $entity, $field, $instance, $lan
     // Only validate fields that aren't empty.
     if (!reference_field_is_empty($item, $field)) {
       // Make sure the referenced entity exists.
-      if (!entity_load($item['target_type'], $item['target_id'])) {
+      if (!entity_load($field['settings']['entity_type'], $item['target_id'])) {
         $errors[$field['field_name']][$langcode][$delta][] = array(
           'error' => 'reference_exists',
           'message' => t('%name: the referenced entity (%target_type %target_id) does not exist.', array(
             '%name' => $instance['label'],
-            '%target_type' => $item['target_type'],
+            '%target_type' => $field['settings']['entity_type'],
             '%target_id' => $item['target_id'],
           )),
         );
@@ -157,9 +157,10 @@ function reference_field_formatter_view($entity_type, $entity, $field, $instance
 function reference_link_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
   foreach ($items as $delta => $target) {
-    $target_type_info = entity_get_info($target['target_type']);
+    $target_type = $field['settings']['entity_type'];
+    $target_type_info = entity_get_info($target_type);
     $target_label_property = $target_type_info['entity keys']['label'];
-    $target_entity = entity_load($target['target_type'], $target['target_id']);
+    $target_entity = entity_load($target_type, $target['target_id']);
     $element[] = array(
       '#markup' => l($target_entity->$target_label_property, $target_entity->path['source']),
     );
