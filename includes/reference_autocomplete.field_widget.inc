@@ -11,6 +11,9 @@
 function reference_autocomplete_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $element['target_id'] = array(
     '#type' => 'textfield',
+    '#title' => $instance['label'],
+    '#description' => $instance['description'],
+    '#required' => $instance['required'],
     '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : '',
     '#autocomplete_path' => 'reference_autocomplete/' . $instance['field_name'] . '-' . $instance['entity_type'] . '-' . $instance['bundle'],
     '#element_validate' => array('reference_autocomplete_validate'),
