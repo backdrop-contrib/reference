@@ -123,8 +123,8 @@ function reference_autocomplete_validate($element, &$form_state, $form) {
  * Form callback for turning a numeric field value into an autocomplete format.
  */
 function reference_autocomplete_value($element, $input = FALSE, $form_state = array()) {
-  // Format a default value if one is present and a new value has not been entered.
-  if(isset($element['#default_value']) && $input === FALSE) {
+  // Format a default value if present and a new value has not been entered.
+  if($element['#default_value'] && $input === FALSE) {
     $target_type = $element['#settings_entity_type'];
     $target_type_info = entity_get_info($target_type);
     $target_label_property = $target_type_info['entity keys']['label'];
