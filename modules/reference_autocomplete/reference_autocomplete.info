@@ -1,0 +1,9 @@
+name = Reference Autocomplete
+description = Defines an autocomplete form widget for Reference fields.
+package = Fields
+hidden = TRUE
+version = BACKDROP_VERSION
+type = module
+backdrop = 1.x
+dependencies[] = field
+dependencies[] = entity

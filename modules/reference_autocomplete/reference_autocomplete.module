@@ -5,8 +5,20 @@
  * Contains the functions for the reference autocomplete widget.
  */
 
+ /**
+  * Implements hook_field_widget_info() to define an autocomplete form widget.
+  */
+ function reference_autocomplete_field_widget_info() {
+   return array(
+     'reference_autocomplete' => array(
+       'label' => t('Autocomplete'),
+       'field types' => array('reference'),
+     ),
+   );
+ }
+
 /**
- * Called from reference_field_widget_form() to provide an autocomplete form widget .
+  * Implements hook_field_widget_form() to provide an autocomplete form widget .
  */
 function reference_autocomplete_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $element['target_id'] = array(
@@ -23,9 +35,21 @@ function reference_autocomplete_widget_form(&$form, &$form_state, $field, $insta
 }
 
 /**
+ * Implements hook_menu() to provide autocomplete callback.
+ */
+function reference_autocomplete_menu() {
+  $items['reference_autocomplete_results'] = array(
+    'page callback' => 'reference_autocomplete',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
  * Menu callback for providing autocomplete values to the reference fields.
  */
-function reference_autocomplete($field_instance = NULL, $typed = '') {
+function reference_autocomplete_results($field_instance = NULL, $typed = '') {
 
   // Get the info for the field and instance that is being autocompleted.
   list($field_name, $entity_type, $bundle) = explode('-', $field_instance);

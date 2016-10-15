@@ -6,3 +6,4 @@ type = module
 backdrop = 1.x
 dependencies[] = field
 dependencies[] = entity
+dependencies[] = reference_autocomplete

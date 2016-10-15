@@ -23,19 +23,6 @@ function reference_entity_info_alter(&$entity_info) {
 }
 
 /**
- * Implements hook_menu() to provide autocomplete callback.
- */
-function reference_menu() {
-  $items['reference_autocomplete'] = array(
-    'page callback' => 'reference_autocomplete',
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-    'file' => 'includes/reference_autocomplete.field_widget.inc'
-  );
-  return $items;
-}
-
-/**
  * Implements hook_field_info() to define the reference field.
  */
 function reference_field_info() {
@@ -144,26 +131,6 @@ function reference_field_validate($entity_type, $entity, $field, $instance, $lan
 }
 
 /**
- * Implements hook_field_widget_info() to define an autocomplete form widget.
- */
-function reference_field_widget_info() {
-  return array(
-    'reference_autocomplete' => array(
-      'label' => t('Autocomplete'),
-      'field types' => array('reference'),
-    ),
-  );
-}
-
-/**
- * Implements hook_field_widget_form() to provide an autocomplete form widget .
- */
-function reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  require_once 'includes/reference_autocomplete.field_widget.inc';
-  return reference_autocomplete_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
-}
-
-/**
  * Implements hook_field_formatter_info() to register the field formatter.
  */
 function reference_field_formatter_info() {
@@ -180,7 +147,22 @@ function reference_field_formatter_info() {
  */
 function reference_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   if ($display['type'] == 'reference_link') {
-    require_once 'includes/reference_link.field_formatter.inc';
     return reference_link_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
   }
+}
+
+/**
+ * Called from reference_field_formatter_view() to create the formatter view.
+ */
+function reference_link_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  foreach ($items as $delta => $target) {
+    $target_type_info = entity_get_info($target['target_type']);
+    $target_label_property = $target_type_info['entity keys']['label'];
+    $target_entity = entity_load($target['target_type'], $target['target_id']);
+    $element[] = array(
+      '#markup' => l($target_entity->$target_label_property, $target_entity->path['source']),
+    );
+  }
+  return $element;
 }
