@@ -7,25 +7,19 @@ This module is currently under development and should not be used on any product
 
 ### In progress:
 
-* Fix field validate to only use single entity type.
-* Fix autocomplete widget to use field details instead of entity type and bundle.
+* moving autocomplete widget to its own separate submodule.
 
 ### Things to do:
 
-* autocomplete callback failing for comment types
 * check that entity exists in autocomplete validate
-* get autocomplete function to respect status restrictions
-* permissions on autocomplete callback to check that user has ability to edit the field
+* update field validation to test that the referenced entity meets current restrictions
+* access check on autocomplete callback to check that user has ability to edit the field
 * add access check to the entity info so user can only select content they can access
-* update field validation to test that the referenced entity meets restrictions
-* behaviour for when an extisting target is no longer an allowed entity bundle
-* hide or disable entity type selector if only one entity type can be selected
-* hide the numeric id from the user after autocomplete select?
+* hide the numeric id from the user after autocomplete select
 * autocomplete to get entity labels that start with the typed text before just containing
-* error or watchdog when trying to reference an entity that hasn't defined its keys properly
 * additional field formatter to display rendered entity
 * views integration
-* mutilingual support for label autocomplete
+* multilingual support for label autocomplete
 * and many more...
 
 ### Test to write: ###
