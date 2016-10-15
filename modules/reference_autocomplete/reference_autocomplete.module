@@ -20,7 +20,7 @@
 /**
   * Implements hook_field_widget_form() to provide an autocomplete form widget .
  */
-function reference_autocomplete_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+function reference_autocomplete_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $element['target_id'] = array(
     '#type' => 'textfield',
     '#title' => $instance['label'],
@@ -38,8 +38,8 @@ function reference_autocomplete_widget_form(&$form, &$form_state, $field, $insta
  * Implements hook_menu() to provide autocomplete callback.
  */
 function reference_autocomplete_menu() {
-  $items['reference_autocomplete_results'] = array(
-    'page callback' => 'reference_autocomplete',
+  $items['reference_autocomplete'] = array(
+    'page callback' => 'reference_autocomplete_results',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
