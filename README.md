@@ -5,9 +5,16 @@ Defines a field type to let entities referencing other entities in Backdrop.
 
 This module is currently under development and should not be used on any production sites.
 
+That being said, most of the core functionality is ready, so please test it out.
+
+### In progress:
+
+* Views integration
+
 ### Things to do:
 
-*  Why is the echo in backdrop_json_output not disabling the theme?
+* reverse views relationship
+* Why is the echo in backdrop_json_output not disabling the theme?
 * validate that the text matches the title of the entity with the entered id
 * figure out proper way to set widget title so it isn't repeated with multiple values.
 * make sure that a default value can be set in the field instance settings form
@@ -17,7 +24,6 @@ This module is currently under development and should not be used on any product
 * hide the numeric id from the user after autocomplete select
 * autocomplete to get entity labels that start with the typed text before just containing
 * additional field formatter to display rendered entity
-* views integration
 * multilingual support for label autocomplete
 * and many more...
 
@@ -33,6 +39,7 @@ This module is currently under development and should not be used on any product
 * changing an existing field value
 * display value on entity view
 * required field cannot be blank
+* default value entered in the instance form
 
 ### To merge into core:
 
