@@ -1,21 +1,15 @@
 # Reference
-Defines a field type to let entities referencing other entites in Backdrop.
+Defines a field type to let entities referencing other entities in Backdrop.
 
 ### Current status:
 
 This module is currently under development and should not be used on any production sites.
 
-### In progress:
-
-* figure out why changing the field value doesn't make change on save
-
 ### Things to do:
 
-* do we really want to use a value_callback to set the default value?
-* what happens if you feed it a bad id number
+* validate that the text matches the title of the entity with the entered id
 * figure out proper way to set widget title so it isn't repeated with multiple values.
 * make sure that a default value can be set in the field instance settings form
-* check that entity exists in autocomplete validate
 * update field validation to test that the referenced entity meets current restrictions
 * access check on autocomplete callback to check that user has ability to edit the field
 * add access check to the entity info so user can only select content they can access
