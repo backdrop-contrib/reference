@@ -7,6 +7,7 @@ This module is currently under development and should not be used on any product
 
 ### Things to do:
 
+*  Why is the echo in backdrop_json_output not disabling the theme?
 * validate that the text matches the title of the entity with the entered id
 * figure out proper way to set widget title so it isn't repeated with multiple values.
 * make sure that a default value can be set in the field instance settings form
