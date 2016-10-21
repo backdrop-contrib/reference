@@ -139,6 +139,13 @@ function reference_field_formatter_info() {
       'label' => t('Reference link'),
       'field types' => array('reference'),
     ),
+    'reference_rendered' => array(
+      'label' => t('Rendered entity (not ready)'),
+      'field types' => array('reference'),
+      'settings' => array(
+        'view_mode' => '',
+      ),
+    ),
   );
 }
 
@@ -148,6 +155,9 @@ function reference_field_formatter_info() {
 function reference_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   if ($display['type'] == 'reference_link') {
     return reference_link_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
+  }
+  if ($display['type'] == 'reference_rendered') {
+    return reference_rendered_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
   }
 }
 
@@ -171,6 +181,26 @@ function reference_link_formatter_view($entity_type, $entity, $field, $instance,
     $elements[] = array(
       '#markup' => l($target_entity->label(), $target_uri['path'], $target_uri['options']),
     );
+  }
+  return $elements;
+}
+
+/**
+ * Called from reference_field_formatter_view() to create the formatter view.
+ */
+function reference_rendered_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $target_type = $field['settings']['entity_type'];
+  $elements = array();
+  // We need to guess the view function until $entity->view() is created.
+  // https://github.com/backdrop/backdrop-issues/issues/1739
+  $view_function = $target_type . "_view";
+  if (function_exists($view_function)) {
+    foreach ($items as $delta => $target) {
+      $target_entity = entity_load($target_type, $target['target_id']);
+      // To-do: don't default to full and actually get field setting.
+      $elements[] = call_user_func($view_function, $target_entity, 'full', $langcode);
+      // To-do: different arguments for comments.
+    }
   }
   return $elements;
 }
