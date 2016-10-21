@@ -143,10 +143,41 @@ function reference_field_formatter_info() {
       'label' => t('Rendered entity (not ready)'),
       'field types' => array('reference'),
       'settings' => array(
-        'view_mode' => '',
+        'view_mode' => 'full',
       ),
     ),
   );
+}
+/**
+ * Implements hook_field_formatter_settings_summary
+ */
+function reference_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $summary = '';
+  if ($display['type'] == 'reference_rendered') {
+    $summary = t('View mode: @view_mode', array('@view_mode' => $settings['view_mode']));
+  }
+  return $summary;
+}
+
+/**
+ * Implements hook_field_formatter_settings_form
+ */
+function reference_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $element = array();
+  if ($display['type'] == 'reference_rendered') {
+    $element['view_mode'] = array(
+      '#title' => t('View Mode'),
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#default_value' => $settings['view_mode'],
+      '#required' => TRUE,
+    );
+  }
+  return $element;
 }
 
 /**
