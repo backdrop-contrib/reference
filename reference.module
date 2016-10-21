@@ -155,19 +155,25 @@ function reference_field_formatter_view($entity_type, $entity, $field, $instance
  * Called from reference_field_formatter_view() to create the formatter view.
  */
 function reference_link_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $element = array();
+  $target_type = $field['settings']['entity_type'];
+  $elements = array();
   foreach ($items as $delta => $target) {
-    $target_type = $field['settings']['entity_type'];
-    $target_type_info = entity_get_info($target_type);
-    $target_label_property = $target_type_info['entity keys']['label'];
     $target_entity = entity_load($target_type, $target['target_id']);
-    $element[] = array(
-      '#markup' => l($target_entity->$target_label_property, $target_entity->path['source']),
+    $target_uri = $target_entity->uri();
+    if ($target_type == 'file') {
+      // Handle file stream wrappers since l() and url() currently don't.
+      // https://github.com/backdrop/backdrop-issues/issues/2300
+      $target_uri['path'] = file_create_url($target_uri['path']);
+      // Add options array for files until fixed in core.
+      // https://github.com/backdrop/backdrop-issues/issues/2299
+      $target_uri['options'] = array();
+    }
+    $elements[] = array(
+      '#markup' => l($target_entity->label(), $target_uri['path'], $target_uri['options']),
     );
   }
-  return $element;
+  return $elements;
 }
-
 
  /**
   * Implements hook_field_widget_info() to define an autocomplete form widget.
