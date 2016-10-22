@@ -140,7 +140,7 @@ function reference_field_formatter_info() {
       'field types' => array('reference'),
     ),
     'reference_rendered' => array(
-      'label' => t('Rendered entity (not ready)'),
+      'label' => t('Rendered entity'),
       'field types' => array('reference'),
       'settings' => array(
         'view_mode' => 'full',
@@ -154,9 +154,11 @@ function reference_field_formatter_info() {
 function reference_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
+  $target_entity_type = $field['settings']['entity_type'];
+  $target_entity_info = entity_get_info($target_entity_type);
   $summary = '';
   if ($display['type'] == 'reference_rendered') {
-    $summary = t('View mode: @view_mode', array('@view_mode' => $settings['view_mode']));
+    $summary = t('View mode: @view_mode', array('@view_mode' => $target_entity_info['view modes'][$settings['view_mode']]['label']));
   }
   return $summary;
 }
@@ -167,12 +169,18 @@ function reference_field_formatter_settings_summary($field, $instance, $view_mod
 function reference_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
+  $target_entity_type = $field['settings']['entity_type'];
+  $target_entity_info = entity_get_info($target_entity_type);
+  $view_modes = array();
+  foreach ($target_entity_info['view modes'] as $key => $options) {
+    $view_modes[$key] = $options['label'];
+  }
   $element = array();
   if ($display['type'] == 'reference_rendered') {
     $element['view_mode'] = array(
       '#title' => t('View Mode'),
-      '#type' => 'textfield',
-      '#size' => 20,
+      '#type' => 'select',
+      '#options' => $view_modes,
       '#default_value' => $settings['view_mode'],
       '#required' => TRUE,
     );
@@ -228,8 +236,7 @@ function reference_rendered_formatter_view($entity_type, $entity, $field, $insta
   if (function_exists($view_function)) {
     foreach ($items as $delta => $target) {
       $target_entity = entity_load($target_type, $target['target_id']);
-      // To-do: don't default to full and actually get field setting.
-      $elements[] = call_user_func($view_function, $target_entity, 'full', $langcode);
+      $elements[] = call_user_func($view_function, $target_entity, $display['settings']['view_mode'], $langcode);
       // To-do: different arguments for comments.
     }
   }
