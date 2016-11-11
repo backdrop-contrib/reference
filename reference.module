@@ -292,7 +292,7 @@ function reference_menu() {
 function reference_autocomplete_results($field_instance = NULL, $typed = '') {
 
   // Get the info for the field and instance that is being autocompleted.
-  list($field_name, $entity_type, $bundle) = explode('-', $field_instance);
+  list($field_name, $entity_type, $bundle) = count(explode('-', $field_instance)) == 3 ? explode('-', $field_instance): array('', '', '');
   $field_info = field_info_field($field_name);
   $field_instance_info = field_info_instance($entity_type, $field_name, $bundle);
 
@@ -300,46 +300,52 @@ function reference_autocomplete_results($field_instance = NULL, $typed = '') {
   $target_entity_type = $field_info['settings']['entity_type'];
   $target_entity_status = $field_instance_info['settings']['status'];
   $target_entity_bundles = array();
-  foreach ($field_instance_info['settings']['bundles'] as $bundle => $active) {
-    if ($active) {
-      $target_entity_bundles[] = $bundle;
+  if (isset($field_instance_info['settings']['bundles'])) {
+    foreach ($field_instance_info['settings']['bundles'] as $bundle => $active) {
+      if ($active) {
+        $target_entity_bundles[] = $bundle;
+      }
     }
   }
 
   // Get the database table info for the target entity type.
   $entity_info = entity_get_info($target_entity_type);
-  $base_table = $entity_info['base table'];
-  $keys = $entity_info['entity keys'];
+  $base_table = isset($entity_info['base table']) ? $entity_info['base table'] : '' ;
+  $keys = isset($entity_info['entity keys']) ? $entity_info['entity keys'] : '' ;
 
-  // Build the query of our base table using the text that has been typed in .
-  $query = db_select($base_table, 'bt')
-    ->fields('bt', array($keys['id'], $keys['label']))
-    ->condition($keys['label'], '%' . db_like($typed) . '%', 'LIKE')
-    ->orderBy($keys['label'])
-    ->range(0, 10);
+  if ($keys != '') {
+    // Build the query of our base table using the text that has been typed in.
+    $query = db_select($base_table, 'bt')
+      ->fields('bt', array($keys['id'], $keys['label']))
+      ->condition($keys['label'], '%' . db_like($typed) . '%', 'LIKE')
+      ->orderBy($keys['label'])
+      ->range(0, 10);
 
-  // Add a condition if we are limiting the bundles returned.
-  if ($target_entity_bundles) {
-    $query->condition($keys['bundle'], $target_entity_bundles,'IN');
+    // Add a condition if we are limiting the bundles returned.
+    if ($target_entity_bundles) {
+      $query->condition($keys['bundle'], $target_entity_bundles,'IN');
+    }
+
+    // Add a condition if we are limiting results to published content.
+    if ($target_entity_status) {
+      $query->condition($keys['status'], 1,'=');
+    }
+
+    // Execute the query, format the results, and output as JSON.
+    $result = $query->execute();
+
+    $matches = array();
+    foreach ($result as $entity) {
+      $item = reference_autocomplete_item_format($entity->{$keys['id']}, $entity->{$keys['label']});
+      $matches[$item] = $item;
+    }
+    backdrop_json_output($matches);
+    backdrop_exit();
+    // TODO: Why is the echo in backdrop_json_output not disabling the theme?
+    //backdrop_exit();
+    // module_invoke_all('exit');
+    // backdrop_exit();
   }
-
-  // Add a condition if we are limiting results to published content.
-  if ($target_entity_status) {
-    $query->condition($keys['status'], 1,'=');
-  }
-
-  // Execute the query, format the results, and output as JSON.
-  $result = $query->execute();
-  $matches = array();
-  foreach ($result as $entity) {
-    $item = reference_autocomplete_item_format($entity->{$keys['id']}, $entity->{$keys['label']});
-    $matches[$item] = $item;
-  }
-  backdrop_json_output($matches);
-
-  // TO DO: Why is the echo in backdrop_json_output not disabling the theme?
-  module_invoke_all('exit');
-  exit();
 }
 
 /**

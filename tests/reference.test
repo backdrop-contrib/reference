@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * Tests for file.module.
+ * Tests for reference.module.
  */
 
 /**
@@ -10,7 +11,7 @@
 class ReferenceFieldTestCase extends BackdropWebTestCase {
   protected $admin_user;
 
-  function setUp() { 
+  function setUp() {
     // Since this is a base class for many test cases, support the same
     // flexibility that BackdropWebTestCase::setUp() has for the modules to be
     // passed in as either an array or a variable number of string arguments.
@@ -46,7 +47,7 @@ class ReferenceFieldTestCase extends BackdropWebTestCase {
     foreach($entity_types as $entity_type => $entity_info) {
       foreach($entity_info['bundles'] as $bundle => $bundle_info) {
         $output = $this->referenceAutocompleteRequest($entity_type . '-' . $bundle);
-        $json = backdrop_json_decode($output);
+        $json = backdrop_json_encode($output);
         $this->assertNotNull($json, 'JSON is returned for the "' . $entity_type . '" entity type "' . $bundle . '" bundle.');
       }
     }
