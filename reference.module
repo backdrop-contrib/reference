@@ -296,6 +296,12 @@ function reference_autocomplete_results($field_instance = NULL, $typed = '') {
   $field_info = field_info_field($field_name);
   $field_instance_info = field_info_instance($entity_type, $field_name, $bundle);
 
+  // If valid field or entity names were not provided return access denied.
+  if (!$field_info || !$field_instance_info) {
+    backdrop_add_http_header('Status', '403 Forbidden');
+    backdrop_exit();
+  }
+
   // Determine our target entity parameters based on the field settings.
   $target_entity_type = $field_info['settings']['entity_type'];
   $target_entity_status = $field_instance_info['settings']['status'];
