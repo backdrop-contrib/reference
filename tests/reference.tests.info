@@ -3,3 +3,9 @@ name = Reference field test
 description = Tests for the reference field.
 group = Reference
 file = reference.test
+
+[ReferenceFieldAutocompleteTest]
+name = Reference field autocomplete test
+description = Tests for the reference field autocomplete callback.
+group = Reference
+file = reference.autocomplete.test

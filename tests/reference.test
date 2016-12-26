@@ -16,24 +16,9 @@ class ReferenceFieldTestCase extends FieldTestCase {
    * Enable necessary modules.
    */
   function setUp() {
-    $modules = array('reference', 'comment', 'file', 'taxonomy');
+    $modules = func_get_args();
+    $modules[] = 'reference';
     parent::setUp($modules);
   }
 
-  /**
-   * Make a request to the reference autocomplete url and get results.
-   */
-  protected function referenceAutocompleteRequest($field_name, $entity_type, $bundle, $typed = '') {
-    $field_instance = implode('-', array($field_name, $entity_type, $bundle));
-    return $this->backdropGet('reference_autocomplete/' . $field_instance . '/' . $typed);
-  }
-
-  /**
-   * Test the autocomplete responses.
-   */
-  public function testReferenceAutocomplete() {
-    // Make sure that the autocomplete returns access denied when a field instance doesn't exist.
-    $this->referenceAutocompleteRequest('not', 'real', 'data');
-    $this->assertResponse(403, 'Access is denied when trying to access an invalid field instance.');
-  }
 }
