@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Admin tests for Reference module.
+ */
+
+require_once(__DIR__ . '/reference.test');
+
+/**
+* Test for Reference admin UI.
+*/
+class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Reference Admin UI',
+      'description' => 'Tests for the administrative UI.',
+      'group' => 'Reference',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp();
+    // Create test admin user.
+    $this->admin_user = $this->backdropCreateUser(array('access content', 'administer content types', 'administer fields'));
+    $this->backdropLogin($this->admin_user);
+  }
+
+  /**
+  * Test the process of testing a creating reference field.
+  */
+  public function testFieldCreation() {
+
+    // Generate a random name for our test field.
+    $this->field_name = strtolower($this->randomName());
+
+    // Add the reference field using the field admin ui.
+    $output = $this->backdropGet('admin/structure/types/manage/post/fields');
+    $this->backdropPost('admin/structure/types/manage/post/fields', array(
+      'fields[_add_new_field][label]' => $this->field_name,
+      'fields[_add_new_field][field_name]' => $this->field_name,
+      'fields[_add_new_field][type]' => 'reference',
+      'fields[_add_new_field][widget_type]' => 'reference_autocomplete',
+    ), t('Save'));
+
+    // Ensure that the entity type selection is on the field setting form.
+    $this->assertText('Field settings', "On field settings form.");
+    $this->assertFieldByName('field[settings][entity_type]');
+  }
+}
