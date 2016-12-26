@@ -10,7 +10,7 @@ require_once BACKDROP_ROOT . '/core/modules/field/tests/field.test';
 /**
  * Unit tests for reference fields.
  */
-class ReferenceFieldTestCase extends FieldTestCase {
+class ReferenceFieldTestCase extends DrupalWebTestCase {
 
   /**
    * Enable necessary modules.
