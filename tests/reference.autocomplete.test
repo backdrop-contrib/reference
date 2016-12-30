@@ -30,5 +30,10 @@ class ReferenceFieldAutocompleteTest extends ReferenceFieldTestCase {
     // Make sure that the autocomplete returns access denied when a field instance doesn't exist.
     $this->backdropGet('reference_autocomplete/not-valid-instance/');
     $this->assertResponse(403, 'Access is denied when trying to access an invalid field instance.');
+
+    // Test that a reference field created without setting the target entity type doesn't return errors.
+    $this->createField('node', 'post');
+    $this->assertNotNull($this->field_name, "Field " . $this->field_name . "has been created.");
+    $this->backdropGet('reference_autocomplete/' . $this->field_name . '-node-post/');
   }
 }

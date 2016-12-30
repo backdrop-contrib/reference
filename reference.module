@@ -31,10 +31,10 @@ function reference_field_info() {
       'label' => t('Reference'),
       'description' => t('Defines a field type for referencing other entities.'),
       'settings' => array(
-        'entity_type' => '',
+        'entity_type' => 'node',
       ),
       'instance_settings' => array(
-        'bundles' => '',
+        'bundles' => array(),
         'status' => '',
       ),
       'default_widget' => 'reference_autocomplete',
