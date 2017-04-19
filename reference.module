@@ -324,8 +324,8 @@ function reference_autocomplete_results($field_instance = NULL, $typed = '') {
     ->orderBy($keys['label'])
     ->range(0, 10);
 
-  // Add a condition if we are limiting the bundles returned.
-  if ($target_entity_bundles) {
+  // Add a condition if the entity has bundles and we are only targeting some.
+  if (!empty($keys['bundle']) && $target_entity_bundles) {
     $query->condition($keys['bundle'], $target_entity_bundles,'IN');
   }
 

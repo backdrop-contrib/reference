@@ -35,5 +35,11 @@ class ReferenceFieldAutocompleteTest extends ReferenceFieldTestCase {
     $this->createField('node', 'post');
     $this->assertNotNull($this->field_name, "Field " . $this->field_name . "has been created.");
     $this->backdropGet('reference_autocomplete/' . $this->field_name . '-node-post/');
+
+    // Test refererencing an entity that doesn't have bundles.
+    $this->createField('node', 'post', array('target_type' => 'user', 'target_bundles' => array('user')));
+    $this->assertNotNull($this->field_name, "Field " . $this->field_name . "has been created.");
+    $this->backdropGet('reference_autocomplete/' . $this->field_name . '-node-post/');
+    $this->assertResponse(200, "No problem when querying a entity type that doesn't have bundles.");
   }
 }
