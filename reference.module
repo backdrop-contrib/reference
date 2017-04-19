@@ -77,8 +77,11 @@ function reference_field_instance_settings_form($field, $instance) {
   // Determine the options for the entity bundles selection.
   $bundles_options = array();
   $entity_type_info = entity_get_info($field['settings']['entity_type']);
-  foreach ($entity_type_info['bundles'] as $bundle => $bundle_info) {
-    $bundles_options[$bundle] = $bundle_info['label'];
+  // Only compile a list of bundles if an entity key is specified.
+  if(!empty($entity_type_info['entity keys']['bundle'])) {
+    foreach ($entity_type_info['bundles'] as $bundle => $bundle_info) {
+      $bundles_options[$bundle] = $bundle_info['label'];
+    }
   }
   // Build the field instance setting form.
   $form = array();
@@ -90,14 +93,17 @@ function reference_field_instance_settings_form($field, $instance) {
     '#disabled' => !isset($entity_type_info['entity keys']['status']),
     '#description' => !isset($entity_type_info['entity keys']['status']) ? t("Notice: This entity type has not declared its status attribute.") : '',
   );
-  $form['bundles'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Allowed bundles'),
-    '#description' => t('Leave unchecked to allow all bundles to be referenced.'),
-    '#options' => $bundles_options,
-    '#multiple' => TRUE,
-    '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
-  );
+
+  if(!empty($bundles_options)) {
+    $form['bundles'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Allowed bundles'),
+      '#description' => t('Leave unchecked to allow all bundles to be referenced.'),
+      '#options' => $bundles_options,
+      '#multiple' => TRUE,
+      '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
+    );
+  }
   return $form;
 }
 

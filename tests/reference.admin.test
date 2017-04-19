@@ -53,4 +53,17 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
       $this->assertOption('edit-field-settings-entity-type', $type, $info['label'] . " is an entity type option.");
     }
   }
+
+  /**
+  * Test the process of testing a creating reference field.
+  */
+  public function testUserInstance() {
+    $this->createField('node', 'post', array('target_type' => 'user', 'target_bundles' => array('user')));
+    $this->assertNotNull($this->field_name, "Field " . $this->field_name . "has been created to test user reference.");
+    $output = $this->backdropGet('admin/structure/types/manage/post/fields/' . $this->field_name);
+    $this->assertText('These settings apply only to the', "On field instance settings form.");
+
+    // Check the the bundles selection field does not exist since the user entity doesn't specify a bundles key.
+    $this->assertNoField('instance[settings][bundles][user]', 'Bundles field doesn\'t show for entity type with no bundles key.');
+  }
 }
