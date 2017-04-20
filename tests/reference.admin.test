@@ -35,7 +35,6 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
     $this->field_name = strtolower($this->randomName());
 
     // Check that a reference field can be created using the field admin ui.
-    $output = $this->backdropGet('admin/structure/types/manage/post/fields');
     $this->backdropPost('admin/structure/types/manage/post/fields', array(
       'fields[_add_new_field][label]' => $this->field_name,
       'fields[_add_new_field][field_name]' => $this->field_name,
@@ -45,13 +44,21 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
 
     // Check that the entity type selection is on the field setting form.
     $this->assertText('Field settings', "On field settings form.");
-    $this->assertFieldByName('field[settings][entity_type]');
+    $this->assertField('edit-field-settings-entity-type', "Entity type select field exists.");
 
     // Check that each enabled entity type is available as a type to reference.
     $entity_info = entity_get_info();
     foreach ($entity_info as $type => $info ) {
       $this->assertOption('edit-field-settings-entity-type', $type, $info['label'] . " is an entity type option.");
     }
+
+    // Check that nodes are selected by default.
+    $this->assertOptionSelected('edit-field-settings-entity-type', 'node', "Node is the default entity type to be selected.");
+
+    // Check that the widget settings form can be submitted.
+    $this->backdropPost('admin/structure/types/manage/post/fields/field_' . $this->field_name . '/field-settings', array(
+      'field[settings][entity_type]' => 'node',
+    ), t('Save field settings'));
   }
 
   /**
