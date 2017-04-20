@@ -290,7 +290,7 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
  */
 function reference_menu() {
   $items['reference_autocomplete'] = array(
-    'page callback' => 'reference_autocomplete_results',
+    'page callback' => 'reference_autocomplete_query',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
@@ -300,7 +300,7 @@ function reference_menu() {
 /**
  * Menu callback for providing autocomplete values to the reference fields.
  */
-function reference_autocomplete_results($field_instance = NULL, $typed = '') {
+function reference_autocomplete_query($field_instance = NULL, $typed = '') {
 
   // Get the info for the field and instance that is being autocompleted.
   list($field_name, $entity_type, $bundle) = explode('-', $field_instance);
