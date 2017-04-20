@@ -74,36 +74,41 @@ function reference_field_settings_form($field, $instance, $has_data) {
  * Implements hook_field_instance_settings_form() for setting instance options.
  */
 function reference_field_instance_settings_form($field, $instance) {
-  // Determine the options for the entity bundles selection.
-  $bundles_options = array();
   $entity_type_info = entity_get_info($field['settings']['entity_type']);
-  // Only compile a list of bundles if an entity key is specified.
-  if(!empty($entity_type_info['entity keys']['bundle'])) {
-    foreach ($entity_type_info['bundles'] as $bundle => $bundle_info) {
-      $bundles_options[$bundle] = $bundle_info['label'];
-    }
-  }
-  // Build the field instance setting form.
   $form = array();
+
+  // Allow the reference options to be filtered by entity status.
   $form['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('Limit to published content'),
     '#default_value' =>  $instance['settings']['status'],
-    // Ensure that the entity type has registered its status entity info key.
-    '#disabled' => !isset($entity_type_info['entity keys']['status']),
-    '#description' => !isset($entity_type_info['entity keys']['status']) ? t("Notice: This entity type has not declared its status attribute.") : '',
   );
-
-  if(!empty($bundles_options)) {
-    $form['bundles'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Allowed bundles'),
-      '#description' => t('Leave unchecked to allow all bundles to be referenced.'),
-      '#options' => $bundles_options,
-      '#multiple' => TRUE,
-      '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
-    );
+  // Ensure that the entity type has registered its status key in entity info .
+  if(!isset($entity_type_info['entity keys']['status']) || empty($entity_type_info['entity keys']['status'])) {
+    $form['status']['#disabled'] = true;
+    $form['status']['#description'] = t("Sorry, this entity type does not support limiting reference selection by status. <em>(no key for status found in entity info)</em>");
   }
+
+  // Allow the reference options to be filtered by entity bundle.
+  $bundles_options = array();
+  foreach ($entity_type_info['bundles'] as $bundle => $bundle_info) {
+    $bundles_options[$bundle] = $bundle_info['label'];
+  }
+  $form['bundles'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Allowed bundles'),
+    '#options' => $bundles_options,
+    '#multiple' => TRUE,
+    '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
+    '#description' => t('Leave unchecked to allow all bundles to be referenced.'),
+  );
+  // Ensure that the entity type has registered its bundle key in entity info.
+  if(!isset($entity_type_info['entity keys']['bundle']) || empty($entity_type_info['entity keys']['bundle'])) {
+    $form['bundles']['#options'] = array();
+    $form['bundles']['#disabled'] = true;
+    $form['bundles']['#description'] = t('Sorry, this entity type does not support limiting reference selection by bundle. <em>(no key for bundle found in entity info)</em>');
+  }
+
   return $form;
 }
 
