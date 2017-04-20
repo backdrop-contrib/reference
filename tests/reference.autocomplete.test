@@ -33,13 +33,13 @@ class ReferenceFieldAutocompleteTest extends ReferenceFieldTestCase {
 
     // Test that a reference field created without setting the target entity type doesn't return errors.
     $this->createField('node', 'post');
-    $this->assertNotNull($this->field_name, "Field " . $this->field_name . "has been created.");
     $this->backdropGet('reference_autocomplete/' . $this->field_name . '-node-post/');
+    $this->assertResponse(200, "No error when creating a field without explicitly setting a target entity.");
 
     // Test refererencing an entity that doesn't have bundles.
     $this->createField('node', 'post', array('target_type' => 'user', 'target_bundles' => array('user')));
-    $this->assertNotNull($this->field_name, "Field " . $this->field_name . "has been created.");
     $this->backdropGet('reference_autocomplete/' . $this->field_name . '-node-post/');
-    $this->assertResponse(200, "No problem when querying a entity type that doesn't have bundles.");
+    $this->assertResponse(200, "No error when querying a entity type that doesn't have bundles.");
+
   }
 }
