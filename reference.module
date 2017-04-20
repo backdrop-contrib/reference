@@ -61,7 +61,7 @@ function reference_field_settings_form($field, $instance, $has_data) {
   $form = array();
   $form['entity_type'] = array(
     '#type' => 'select',
-    '#title' => t('Select the entity type to be referenced.'),
+    '#title' => t('Select the type of content to be referenced.'),
     '#options' => $entity_type_options,
     '#default_value' => $field['settings']['entity_type'],
     '#required' => TRUE,
@@ -96,11 +96,11 @@ function reference_field_instance_settings_form($field, $instance) {
   }
   $form['bundles'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Allowed bundles'),
+    '#title' => t('Limit selection by ' . ($entity_type_info['bundle label'] ? strtolower($entity_type_info['bundle label']) : 'type') . ' of ' . strtolower($entity_type_info['label'])),
     '#options' => $bundles_options,
     '#multiple' => TRUE,
     '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
-    '#description' => t('Leave unchecked to allow all bundles to be referenced.'),
+    '#description' => t('Leave unchecked to allow all types to be referenced.'),
   );
   // Ensure that the entity type has registered its bundle key in entity info.
   if(!isset($entity_type_info['entity keys']['bundle']) || empty($entity_type_info['entity keys']['bundle'])) {
