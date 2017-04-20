@@ -68,5 +68,10 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
     $this->createField('node', 'post', array('target_type' => 'user', 'target_bundles' => array('user')));
     $this->backdropGet('admin/structure/types/manage/post/fields/' . $this->field_name);
     $this->assertNoField('instance[settings][bundles][user]', 'Bundles field doesn\'t show for entity type with no bundles key.');
+
+    // Test that bundle settings are not visible for comment reference fields, since they are currently unsuported.
+    $this->createField('node', 'post', array('target_type' => 'comment', 'target_bundles' => array('comment_node_post')));
+    $this->backdropGet('admin/structure/types/manage/post/fields/' . $this->field_name);
+    $this->assertNoField('instance[settings][bundles][comment_node_post]', 'Bundle selection not visible for comments, which are currently unsupported.');
   }
 }

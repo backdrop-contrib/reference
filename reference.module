@@ -105,8 +105,12 @@ function reference_field_instance_settings_form($field, $instance) {
   // Ensure that the entity type has registered its bundle key in entity info.
   if(!isset($entity_type_info['entity keys']['bundle']) || empty($entity_type_info['entity keys']['bundle'])) {
     $form['bundles']['#options'] = array();
-    $form['bundles']['#disabled'] = true;
     $form['bundles']['#description'] = t('Sorry, this entity type does not support limiting reference selection by bundle. <em>(no key for bundle found in entity info)</em>');
+  }
+  // Ensure that the entity type's bundle key matches a column in its base table.
+  if(!db_field_exists($entity_type_info['base table'], $entity_type_info['entity keys']['bundle'])) {
+    $form['bundles']['#options'] = array();
+    $form['bundles']['#description'] = t('Sorry, this entity type does not support limiting reference selection by bundle. <em>(bundle key in entity info not found in database table)</em>');
   }
 
   return $form;
