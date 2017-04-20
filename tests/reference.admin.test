@@ -61,7 +61,7 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
     ), t('Save field settings'));
 
     // Test that the instance settings form can be accessed.
-    $output = $this->backdropGet('admin/structure/types/manage/post/fields/' . $this->field_name);
+    $output = $this->backdropGet('admin/structure/types/manage/post/fields/field_' . $this->field_name);
     $this->assertText('These settings apply only to the', "On field instance settings form.");
 
     // Create a user reference field to test that bundle target is not visible on settings form since it doesn't use bundles.
