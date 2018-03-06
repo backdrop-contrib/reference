@@ -23,3 +23,81 @@ function reference_field_schema($field) {
     ),
   );
 }
+
+/**
+ * Implements hook_install().
+ *
+ * Convert entityreference fields to reference fields.
+ */
+function reference_install() {
+  $names = config_get_names_with_prefix('field.instance.');
+  foreach ($names as $name) {
+    $config = config($name);
+    $settings = $config->get();
+
+    // Load field base settings first.
+    list(, , , , $field_name) = explode('.', $name);
+    $field_config = config('field.field.' . $field_name);
+    $field_settings = $field_config->get();
+
+    if ($field_settings['module'] == 'entityreference') {
+      // Convert field instance.
+      $settings['widget']['module'] = 'reference';
+
+      // Always set widget type to 'reference_autocomplete'; there is no
+      // 'entityreference_autocomplete_tags' option in reference module.
+      $settings['widget']['type'] = 'reference_autocomplete';
+
+      // Remove widget settings; no longer used.
+      $settings['widget']['settings'] = array();
+
+      // Add missing key.
+      $settings['default_value_function'] = NULL;
+
+      // Move bundle filtering to instance settings.
+      $settings['settings']['bundles'] = $field_settings['settings']['handler_settings']['target_bundles'];
+
+      // Set field formatter.
+      $settings['display']['default']['module'] = 'reference';
+      switch ($settings['display']['default']['type']) {
+        case 'entityreference_entity_view':
+          $settings['display']['default']['type'] = 'reference_rendered';
+          $settings['display']['default']['settings'] = array(
+            'view_mode' => isset($settings['display']['default']['settings']['view_mode']) ? $settings['display']['default']['settings']['view_mode'] : 'full',
+          );
+          break;
+
+        case 'entityreference_label':
+        case 'entityreference_entity_id':
+        default:
+          // If custom formatter is used, reset to default formatter.
+          $settings['display']['default']['type'] = 'reference_link';
+          $settings['display']['default']['settings'] = array();
+      }
+
+      // Before saving, convert field base (we first had to move some old
+      // field base settings into the instance settings).
+      list(, , , , $field_name) = explode('.', $name);
+      $field_config = config('field.field.' . $field_name);
+      $field_settings = $field_config->get();
+
+      $field_settings['module'] = 'reference';
+      $field_settings['type'] = 'reference';
+
+      // Discard all settings except target entity type.
+      $field_settings['settings'] = array(
+        'entity_type' => $field_settings['settings']['target_type'],
+      );
+
+      $field_config->setData($field_settings);
+      $field_config->save();
+
+      // Now save field instance settings.
+      $config->setData($settings);
+      $config->save();
+    }
+  }
+
+  // Clear caches to ensure updated fields are loaded.
+  field_cache_clear();
+}
