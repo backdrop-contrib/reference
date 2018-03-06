@@ -26,10 +26,16 @@ function reference_field_schema($field) {
 
 /**
  * Implements hook_install().
- *
- * Convert entityreference fields to reference fields.
  */
 function reference_install() {
+  // Reset schema version, so update hooks can be processed after installation.
+  backdrop_set_installed_schema_version('reference', '0');
+}
+
+/**
+ * Convert entityreference fields to reference fields.
+ */
+function reference_update_1000() {
   $names = config_get_names_with_prefix('field.instance.');
   foreach ($names as $name) {
     $config = config($name);
