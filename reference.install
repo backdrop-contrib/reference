@@ -150,125 +150,142 @@ function _reference_install_change_field($field_name, $field_name_old) {
 /**
  * Convert references fields to reference fields.
  */
-function reference_update_1001() {
-  $names = config_get_names_with_prefix('field.instance.');
-  foreach ($names as $name) {
-    // Load field base settings first.
-    list(, , , , $field_name) = explode('.', $name);
-    $field_config = config('field.field.' . $field_name);
-    $field_settings = $field_config->get();
-
-    if ($field_settings['type'] == 'node_reference') {
-      $config = config($name);
-      $settings = $config->get();
-
-      $bundles = $field_settings['settings']['referenceable_types'];
-      $settings = _reference_install_update_field_instance_settings($settings, $bundles);
-
-      // Set field formatter.
-      $settings['display']['default']['module'] = 'reference';
-      switch ($settings['display']['default']['type']) {
-        case 'node_reference_node':
-          $settings['display']['default']['type'] = 'reference_rendered';
-          $settings['display']['default']['settings'] = array(
-            'view_mode' => isset($settings['display']['default']['settings']['node_reference_view_mode']) ? $settings['display']['default']['settings']['node_reference_view_mode'] : 'full',
-          );
-          break;
-
-        case 'node_reference_default':
-        case 'node_reference_plain':
-        case 'node_reference_nid':
-        case 'node_reference_path':
-        default:
-          // If custom formatter is used, reset to default formatter.
-          $settings['display']['default']['type'] = 'reference_link';
-          $settings['display']['default']['settings'] = array();
-      }
-
-      // Before saving, convert field base (we first had to move some old
-      // field base settings into the instance settings).
-      $field_settings = _reference_install_update_field_base_settings($field_settings, 'node');
-      $field_config->setData($field_settings);
-      $field_config->save();
-
-      // Now save field instance settings.
-      $config->setData($settings);
-      $config->save();
-
-      // Updated db field name.
-      _reference_install_change_field($field_settings['field_name'], $field_settings['field_name'] . '_nid');
-    }
-    elseif ($field_settings['type'] == 'user_reference') {
-      $config = config($name);
-      $settings = $config->get();
-
-      // User entities don't use bundles.
-      $bundles = array();
-      $settings = _reference_install_update_field_instance_settings($settings, $bundles);
-
-      // Set field formatter.
-      $settings['display']['default']['module'] = 'reference';
-      switch ($settings['display']['default']['type']) {
-        case 'user_reference_user':
-          $settings['display']['default']['type'] = 'reference_rendered';
-          $settings['display']['default']['settings'] = array(
-            'view_mode' => isset($settings['display']['default']['settings']['node_reference_view_mode']) ? $settings['display']['default']['settings']['node_reference_view_mode'] : 'full',
-          );
-          break;
-
-        case 'user_reference_default':
-        case 'user_reference_plain':
-        case 'user_reference_uid':
-        case 'user_reference_path':
-        default:
-          // If custom formatter is used, reset to default formatter.
-          $settings['display']['default']['type'] = 'reference_link';
-          $settings['display']['default']['settings'] = array();
-      }
-
-      // Before saving, convert field base (we first had to move some old
-      // field base settings into the instance settings).
-      $field_settings = _reference_install_update_field_base_settings($field_settings, 'user');
-      $field_config->setData($field_settings);
-      $field_config->save();
-
-      // Now save field instance settings.
-      $config->setData($settings);
-      $config->save();
-
-      // Updated db field name.
-      _reference_install_change_field($field_settings['field_name'], $field_settings['field_name'] . '_uid');
-    }
-    elseif ($field_settings['type'] == 'taxonomy_term_reference') {
-      $config = config($name);
-      $settings = $config->get();
-
-      $bundles = $field_settings['settings']['allowed_values'];
-      $settings = _reference_install_update_field_instance_settings($settings, $bundles);
-
-      // Set field formatter.
-      $settings['display']['default']['module'] = 'reference';
-
-      // If custom formatter is used, reset to default formatter.
-      $settings['display']['default']['type'] = 'reference_link';
-      $settings['display']['default']['settings'] = array();
-
-      // Before saving, convert field base (we first had to move some old
-      // field base settings into the instance settings).
-      $field_settings = _reference_install_update_field_base_settings($field_settings, 'user');
-      $field_config->setData($field_settings);
-      $field_config->save();
-
-      // Now save field instance settings.
-      $config->setData($settings);
-      $config->save();
-
-      // Updated db field name.
-      _reference_install_change_field($field_settings['field_name'], $field_settings['field_name'] . '_tid');
-    }
+function reference_update_1001(&$sandbox) {
+  /* @todo Turn into batch process. https://www.drupal.org/forum/support/module-development-and-code-questions/2015-07-17/use-batch-api-in-hook_install */
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['names'] = config_get_names_with_prefix('field.instance.');
+    $sandbox['current_index'] = 0;
+    $sandbox['max'] = count($sandbox['names']);
   }
 
-  // Clear caches to ensure updated fields are loaded.
-  /* @todo Invoking field_cache_clear() doesn't refresh fields in UI. */
-  field_cache_clear();
+  $name = $sandbox['names'][$sandbox['current_index']];
+
+  // Load field base settings first.
+  list(, , , , $field_name) = explode('.', $name);
+  $field_config = config('field.field.' . $field_name);
+  $field_settings = $field_config->get();
+
+  if ($field_settings['type'] == 'node_reference') {
+    $config = config($name);
+    $settings = $config->get();
+
+    $bundles = $field_settings['settings']['referenceable_types'];
+    $settings = _reference_install_update_field_instance_settings($settings, $bundles);
+
+    // Set field formatter.
+    $settings['display']['default']['module'] = 'reference';
+    switch ($settings['display']['default']['type']) {
+      case 'node_reference_node':
+        $settings['display']['default']['type'] = 'reference_rendered';
+        $settings['display']['default']['settings'] = array(
+          'view_mode' => isset($settings['display']['default']['settings']['node_reference_view_mode']) ? $settings['display']['default']['settings']['node_reference_view_mode'] : 'full',
+        );
+        break;
+
+      case 'node_reference_default':
+      case 'node_reference_plain':
+      case 'node_reference_nid':
+      case 'node_reference_path':
+      default:
+        // If custom formatter is used, reset to default formatter.
+        $settings['display']['default']['type'] = 'reference_link';
+        $settings['display']['default']['settings'] = array();
+    }
+
+    // Before saving, convert field base (we first had to move some old
+    // field base settings into the instance settings).
+    $field_settings = _reference_install_update_field_base_settings($field_settings, 'node');
+    $field_config->setData($field_settings);
+    $field_config->save();
+
+    // Now save field instance settings.
+    $config->setData($settings);
+    $config->save();
+
+    // Updated db field name.
+    _reference_install_change_field($field_settings['field_name'], $field_settings['field_name'] . '_nid');
+  }
+  elseif ($field_settings['type'] == 'user_reference') {
+    $config = config($name);
+    $settings = $config->get();
+
+    // User entities don't use bundles.
+    $bundles = array();
+    $settings = _reference_install_update_field_instance_settings($settings, $bundles);
+
+    // Set field formatter.
+    $settings['display']['default']['module'] = 'reference';
+    switch ($settings['display']['default']['type']) {
+      case 'user_reference_user':
+        $settings['display']['default']['type'] = 'reference_rendered';
+        $settings['display']['default']['settings'] = array(
+          'view_mode' => isset($settings['display']['default']['settings']['node_reference_view_mode']) ? $settings['display']['default']['settings']['node_reference_view_mode'] : 'full',
+        );
+        break;
+
+      case 'user_reference_default':
+      case 'user_reference_plain':
+      case 'user_reference_uid':
+      case 'user_reference_path':
+      default:
+        // If custom formatter is used, reset to default formatter.
+        $settings['display']['default']['type'] = 'reference_link';
+        $settings['display']['default']['settings'] = array();
+    }
+
+    // Before saving, convert field base (we first had to move some old
+    // field base settings into the instance settings).
+    $field_settings = _reference_install_update_field_base_settings($field_settings, 'user');
+    $field_config->setData($field_settings);
+    $field_config->save();
+
+    // Now save field instance settings.
+    $config->setData($settings);
+    $config->save();
+
+    // Updated db field name.
+    _reference_install_change_field($field_settings['field_name'], $field_settings['field_name'] . '_uid');
+  }
+  elseif ($field_settings['type'] == 'taxonomy_term_reference') {
+    $config = config($name);
+    $settings = $config->get();
+
+    $bundles = $field_settings['settings']['allowed_values'];
+    $settings = _reference_install_update_field_instance_settings($settings, $bundles);
+
+    // Set field formatter.
+    $settings['display']['default']['module'] = 'reference';
+
+    // If custom formatter is used, reset to default formatter.
+    $settings['display']['default']['type'] = 'reference_link';
+    $settings['display']['default']['settings'] = array();
+
+    // Before saving, convert field base (we first had to move some old
+    // field base settings into the instance settings).
+    $field_settings = _reference_install_update_field_base_settings($field_settings, 'taxonomy_term ');
+    $field_config->setData($field_settings);
+    $field_config->save();
+
+    // Now save field instance settings.
+    $config->setData($settings);
+    $config->save();
+
+    // Updated db field name.
+    _reference_install_change_field($field_settings['field_name'], $field_settings['field_name'] . '_tid');
+  }
+
+  $sandbox['current_index']++;
+  $sandbox['progress']++;
+
+  if ($sandbox['progress'] < $sandbox['max']) {
+    $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
+  }
+  else {
+    $sandbox['#finished'] = 1;
+
+    // Clear caches to ensure updated fields are loaded.
+    /* @todo Invoking field_cache_clear() doesn't refresh fields in UI. */
+    field_cache_clear();
+  }
 }
