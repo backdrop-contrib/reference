@@ -263,7 +263,7 @@ function reference_update_1001(&$sandbox) {
 
     // Before saving, convert field base (we first had to move some old
     // field base settings into the instance settings).
-    $field_settings = _reference_install_update_field_base_settings($field_settings, 'taxonomy_term ');
+    $field_settings = _reference_install_update_field_base_settings($field_settings, 'taxonomy_term');
     $field_config->setData($field_settings);
     $field_config->save();
 
