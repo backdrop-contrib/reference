@@ -151,7 +151,6 @@ function _reference_install_change_field($field_name, $field_name_old) {
  * Convert references fields to reference fields.
  */
 function reference_update_1001(&$sandbox) {
-  /* @todo Turn into batch process. https://www.drupal.org/forum/support/module-development-and-code-questions/2015-07-17/use-batch-api-in-hook_install */
   if (!isset($sandbox['progress'])) {
     $sandbox['progress'] = 0;
     $sandbox['names'] = config_get_names_with_prefix('field.instance.');
@@ -251,7 +250,11 @@ function reference_update_1001(&$sandbox) {
     $config = config($name);
     $settings = $config->get();
 
-    $bundles = $field_settings['settings']['allowed_values'];
+    $bundles = array();
+    if (!empty($field_settings['settings']['allowed_values'][0]['vocabulary'])) {
+      $bundle = $field_settings['settings']['allowed_values'][0]['vocabulary'];
+      $bundles[$bundle] = $bundle;
+    }
     $settings = _reference_install_update_field_instance_settings($settings, $bundles);
 
     // Set field formatter.
