@@ -271,6 +271,16 @@ function reference_rendered_formatter_view($entity_type, $entity, $field, $insta
  }
 
 /**
+ * Implements hook_field_widget_info_alter() to enable select and buttons options.
+ */
+function reference_field_widget_info_alter(&$info) {
+  if (module_exists('options')) {
+    $info['options_select']['field types'][] = 'reference';
+    $info['options_buttons']['field types'][] = 'reference';
+  }
+}
+
+/**
   * Implements hook_field_widget_form() to provide an autocomplete form widget .
  */
 function reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
@@ -290,6 +300,13 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
 }
 
 /**
+ * Implements hook_options_list() to provide options for options module.
+ */
+function reference_options_list($field, $instance = NULL, $entity_type = NULL, $entity = NULL) {
+  return reference_query($instance);
+}
+
+/**
  * Implements hook_menu() to provide autocomplete callback.
  */
 function reference_menu() {
@@ -302,26 +319,14 @@ function reference_menu() {
 }
 
 /**
- * Menu callback for providing autocomplete values to the reference fields.
+ * Provides values for the reference field.
  */
-function reference_autocomplete_query($field_instance = NULL, $typed = '') {
-
-  // Get the info for the field and instance that is being autocompleted.
-  list($field_name, $entity_type, $bundle) = explode('-', $field_instance);
-  $field_info = field_info_field($field_name);
-  $field_instance_info = field_info_instance($entity_type, $field_name, $bundle);
-
-  // If valid field or entity names were not provided return access denied.
-  if (!$field_info || !$field_instance_info) {
-    backdrop_add_http_header('Status', '403 Forbidden');
-    backdrop_exit();
-  }
-
+function reference_query($field_instance, $filter = '', $limit = 0) {
   // Determine our target entity parameters based on the field settings.
-  $target_entity_type = $field_info['settings']['entity_type'];
-  $target_entity_status = $field_instance_info['settings']['status'];
+  $target_entity_type = $field_instance['entity_type'];
+  $target_entity_status = $field_instance['settings']['status'];
   $target_entity_bundles = array();
-  foreach ($field_instance_info['settings']['bundles'] as $bundle => $active) {
+  foreach ($field_instance['settings']['bundles'] as $bundle => $active) {
     if ($active) {
       $target_entity_bundles[] = $bundle;
     }
@@ -335,25 +340,56 @@ function reference_autocomplete_query($field_instance = NULL, $typed = '') {
   // Build the query of our base table using the text that has been typed in .
   $query = db_select($base_table, 'bt')
     ->fields('bt', array($keys['id'], $keys['label']))
-    ->condition($keys['label'], '%' . db_like($typed) . '%', 'LIKE')
-    ->orderBy($keys['label'])
-    ->range(0, 10);
+    ->orderBy($keys['label']);
+
+  // Add limit if specified.
+  if (!empty($filter)) {
+    $query->condition($keys['label'], '%' . db_like($filter) . '%', 'LIKE');
+  }
+
+  // Add limit if specified.
+  if ($limit > 0) {
+    $query->range(0, $limit);
+  }
 
   // Add a condition if the entity has bundles and we are only targeting some.
   if (!empty($keys['bundle']) && $target_entity_bundles) {
-    $query->condition($keys['bundle'], $target_entity_bundles,'IN');
+    $query->condition($keys['bundle'], $target_entity_bundles, 'IN');
   }
 
   // Add a condition if we are limiting results to published content.
   if ($target_entity_status) {
-    $query->condition($keys['status'], 1,'=');
+    $query->condition($keys['status'], 1, '=');
   }
 
-  // Execute the query, format the results, and output as JSON.
+  // Execute the query, return results.
   $result = $query->execute();
   $matches = array();
   foreach ($result as $entity) {
-    $item = reference_autocomplete_item_format($entity->{$keys['id']}, $entity->{$keys['label']});
+    $matches[$entity->{$keys['id']}] = $entity->{$keys['label']};
+  }
+  return $matches;
+}
+
+/**
+ * Menu callback for providing autocomplete values to the reference fields.
+ */
+function reference_autocomplete_query($field_instance = NULL, $typed = '') {
+  // Get the info for the field and instance that is being autocompleted.
+  list($field_name, $entity_type, $bundle) = explode('-', $field_instance);
+  $field_instance_info = field_info_instance($entity_type, $field_name, $bundle);
+
+  // If valid field or entity names were not provided return access denied.
+  if (!$field_instance_info) {
+    backdrop_add_http_header('Status', '403 Forbidden');
+    backdrop_exit();
+  }
+
+  $items = reference_query($field_instance_info, $typed, 10);
+
+  $matches = array();
+  foreach ($items as $id => $label) {
+    $item = reference_autocomplete_item_format($id, $label);
     $matches[$item] = $item;
   }
   backdrop_json_output($matches);
