@@ -322,8 +322,11 @@ function reference_menu() {
  * Provides values for the reference field.
  */
 function reference_query($field_instance, $filter = '', $limit = 0) {
+  // Load field info.
+  $field_info = field_info_field($field_instance['field_name']);
+
   // Determine our target entity parameters based on the field settings.
-  $target_entity_type = $field_instance['entity_type'];
+  $target_entity_type = $field_info['settings']['entity_type'];
   $target_entity_status = $field_instance['settings']['status'];
   $target_entity_bundles = array();
   foreach ($field_instance['settings']['bundles'] as $bundle => $active) {
