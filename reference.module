@@ -303,7 +303,12 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
  * Implements hook_options_list() to provide options for options module.
  */
 function reference_options_list($field, $instance = NULL, $entity_type = NULL, $entity = NULL) {
-  return reference_query($instance);
+  if ($field['settings']['entity_type'] == 'taxonomy_term') {
+    return reference_options_list_taxonomy_term($instance);
+  }
+  else {
+    return reference_query($instance);
+  }
 }
 
 /**
@@ -319,14 +324,52 @@ function reference_menu() {
 }
 
 /**
+ * Provides values for the reference field using taxonomy terms.
+ */
+function reference_options_list_taxonomy_term($field_instance, $filter = '', $limit = 0) {
+  if ($filter || $limit) {
+    return reference_query($field_instance, $filter, $limit);
+  }
+
+  $options = array();
+
+  $entity_info = entity_get_info('taxonomy_term');
+
+  // Get allowed bundles.
+  $bundles = array();
+  foreach ($field_instance['settings']['bundles'] as $bundle => $active) {
+    if ($active) {
+      $bundles[] = $bundle;
+    }
+  }
+  if (empty($bundles)) {
+    $bundles = array_keys($entity_info['bundles']);
+  }
+
+  // We imitate core by calling taxonomy_get_tree().
+  foreach ($bundles as $bundle) {
+    if ($vocabulary = taxonomy_vocabulary_load($bundle)) {
+      if ($terms = taxonomy_get_tree($vocabulary->machine_name, 0, NULL, TRUE)) {
+        /** @var \TaxonomyTerm $term */
+        foreach ($terms as $term) {
+          $options[$vocabulary->name][$term->tid] = str_repeat('-', $term->depth) . check_plain($term->label());
+        }
+      }
+    }
+  }
+
+  return count($bundles) == 1 ? reset($options) : $options;
+}
+
+/**
  * Provides values for the reference field.
  */
 function reference_query($field_instance, $filter = '', $limit = 0) {
   // Load field info.
-  $field_info = field_info_field($field_instance['field_name']);
+  $field = field_info_field($field_instance['field_name']);
 
   // Determine our target entity parameters based on the field settings.
-  $target_entity_type = $field_info['settings']['entity_type'];
+  $target_entity_type = $field['settings']['entity_type'];
   $target_entity_status = $field_instance['settings']['status'];
   $target_entity_bundles = array();
   foreach ($field_instance['settings']['bundles'] as $bundle => $active) {
