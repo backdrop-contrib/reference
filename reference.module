@@ -222,19 +222,20 @@ function reference_link_formatter_view($entity_type, $entity, $field, $instance,
   $target_type = $field['settings']['entity_type'];
   $elements = array();
   foreach ($items as $delta => $target) {
-    $target_entity = entity_load($target_type, $target['target_id']);
-    $target_uri = $target_entity->uri();
-    if ($target_type == 'file') {
-      // Handle file stream wrappers since l() and url() currently don't.
-      // https://github.com/backdrop/backdrop-issues/issues/2300
-      $target_uri['path'] = file_create_url($target_uri['path']);
-      // Add options array for files until fixed in core.
-      // https://github.com/backdrop/backdrop-issues/issues/2299
-      $target_uri['options'] = array();
+    if ($target_entity = entity_load($target_type, $target['target_id'])) {
+      $target_uri = $target_entity->uri();
+      if ($target_type == 'file') {
+        // Handle file stream wrappers since l() and url() currently don't.
+        // https://github.com/backdrop/backdrop-issues/issues/2300
+        $target_uri['path'] = file_create_url($target_uri['path']);
+        // Add options array for files until fixed in core.
+        // https://github.com/backdrop/backdrop-issues/issues/2299
+        $target_uri['options'] = array();
+      }
+      $elements[] = array(
+        '#markup' => l($target_entity->label(), $target_uri['path'], $target_uri['options']),
+      );
     }
-    $elements[] = array(
-      '#markup' => l($target_entity->label(), $target_uri['path'], $target_uri['options']),
-    );
   }
   return $elements;
 }
