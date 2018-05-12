@@ -233,7 +233,10 @@ function reference_link_formatter_view($entity_type, $entity, $field, $instance,
         $target_uri['options'] = array();
       }
       $elements[] = array(
-        '#markup' => l($target_entity->label(), $target_uri['path'], $target_uri['options']),
+        '#theme' => 'link',
+        '#text' => $target_entity->label(),
+        '#path' => $target_uri['path'],
+        '#options' => $target_uri['options'],
       );
     }
   }
