@@ -9,6 +9,7 @@
  * Implements hook_entity_info_alter().
  *
  * TO DO: Patch core entities to have each provide its own values.
+ * https://github.com/backdrop/backdrop-issues/issues/3103
  */
 function reference_entity_info_alter(&$entity_info) {
   $entity_info['comment']['entity keys']['label'] = 'subject';
