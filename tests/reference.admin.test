@@ -65,7 +65,7 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
     $this->assertText('These settings apply only to the', "On field instance settings form.");
 
     // Check that the lable for bundle selection is working properly.
-    $this->assertText('Limit selection by type of node', "Bundle selection field has title with entity type and bundle labels.");
+    $this->assertText('Limit node selection by type', "Filter by bundle field has label with entity type and bundle label.");
 
     // Create a user reference field to test that bundle target is not visible on settings form since it doesn't use bundles.
     $this->createField('node', 'post', array('target_type' => 'user', 'target_bundles' => array('user')));

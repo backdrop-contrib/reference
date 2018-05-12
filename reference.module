@@ -97,7 +97,7 @@ function reference_field_instance_settings_form($field, $instance) {
   }
   $form['bundles'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Limit selection by ' . ($entity_type_info['bundle label'] ? strtolower($entity_type_info['bundle label']) : 'type') . ' of ' . strtolower($entity_type_info['label'])),
+    '#title' => t('Limit ' . strtolower($entity_type_info['label']) . ' selection by ' . ($entity_type_info['bundle label'] ? strtolower($entity_type_info['bundle label']) : 'type')),
     '#options' => $bundles_options,
     '#multiple' => TRUE,
     '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
