@@ -61,7 +61,7 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
     // Check that nodes are selected by default.
     $this->assertOptionSelected('edit-field-settings-entity-type', 'node', "Node is the default entity type to be selected.");
 
-    // Check that the widget settings form can be submitted.
+    // Check that the field settings form can be submitted.
     $this->backdropPost('admin/structure/types/manage/post/fields/field_' . $this->field_name . '/field-settings', array(
       'field[settings][entity_type]' => 'node',
     ), t('Save field settings'));
@@ -70,17 +70,28 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
     $output = $this->backdropGet('admin/structure/types/manage/post/fields/field_' . $this->field_name);
     $this->assertText('These settings apply only to the', "On field instance settings form.");
 
-    // Check that the lable for bundle selection is working properly.
+    // Check that the label for bundle selection is working properly.
     $this->assertText('Limit node selection by type', "Filter by bundle field has label with entity type and bundle label.");
+    $this->assertField('instance[settings][bundles][page]', 'Page is presented as an option for bundle selection.');
+    $this->assertField('instance[settings][bundles][post]', 'Post is presented as an option for bundle selection.');
 
     // Create a user reference field to test that bundle target is not visible on settings form since it doesn't use bundles.
-    $this->createField('node', 'post', array('target_type' => 'user', 'target_bundles' => array('user')));
+    $this->createField('node', 'post', array('target_type' => 'user'));
     $this->backdropGet('admin/structure/types/manage/post/fields/' . $this->field_name);
     $this->assertNoField('instance[settings][bundles][user]', 'Bundles field doesn\'t show for entity type with no bundles key.');
+    $this->assertText('No bundle key defined in entity info', 'Proper clarifcation shown when no bundle key.');
 
     // Test that bundle settings are not visible for comment reference fields, since they are currently unsuported.
-    $this->createField('node', 'post', array('target_type' => 'comment', 'target_bundles' => array('comment_node_post')));
+    $this->createField('node', 'post', array('target_type' => 'comment'));
     $this->backdropGet('admin/structure/types/manage/post/fields/' . $this->field_name);
     $this->assertNoField('instance[settings][bundles][comment_node_post]', 'Bundle selection not visible for comments, which are currently unsupported.');
+    $this->assertText('Bundle key node_type not found in database table', 'Proper clarifcation shown when bundle key not found.');
+
+    // Test that bundle settings are not visisble for file reference fields, since they are not currently supported.
+    $this->createField('node', 'post', array('target_type' => 'file'));
+    $this->backdropGet('admin/structure/types/manage/post/fields/' . $this->field_name);
+    $this->assertNoField('instance[settings][bundles][file]', 'Bundle selection should not be visible for files, until they are supported.');
+    $this->assertText('No bundle key defined in entity info', 'Proper clarifcation shown when no bundle key.');
+
   }
 }

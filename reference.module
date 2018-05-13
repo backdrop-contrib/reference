@@ -95,9 +95,10 @@ function reference_field_instance_settings_form($field, $instance) {
   foreach ($entity_type_info['bundles'] as $bundle => $bundle_info) {
     $bundles_options[$bundle] = $bundle_info['label'];
   }
+  $bundle_label = isset($entity_type_info['bundle label']) && $entity_type_info['bundle label'] ? strtolower($entity_type_info['bundle label']) : 'type';
   $form['bundles'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Limit ' . strtolower($entity_type_info['label']) . ' selection by ' . ($entity_type_info['bundle label'] ? strtolower($entity_type_info['bundle label']) : 'type')),
+    '#title' => t('Limit ' . strtolower($entity_type_info['label']) . ' selection by ' . $bundle_label),
     '#options' => $bundles_options,
     '#multiple' => TRUE,
     '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
@@ -106,12 +107,12 @@ function reference_field_instance_settings_form($field, $instance) {
   // Ensure that the entity type has registered its bundle key in entity info.
   if(!isset($entity_type_info['entity keys']['bundle']) || empty($entity_type_info['entity keys']['bundle'])) {
     $form['bundles']['#options'] = array();
-    $form['bundles']['#description'] = t('Sorry, this entity type does not support limiting reference selection by bundle. <em>(no key for bundle found in entity info)</em>');
+    $form['bundles']['#description'] = t('Sorry, this entity does not support limiting selection by type. <em>(No bundle key defined in entity info.)</em>');
   }
   // Ensure that the entity type's bundle key matches a column in its base table.
-  if(!db_field_exists($entity_type_info['base table'], $entity_type_info['entity keys']['bundle'])) {
+  else if(!db_field_exists($entity_type_info['base table'], $entity_type_info['entity keys']['bundle'])) {
     $form['bundles']['#options'] = array();
-    $form['bundles']['#description'] = t('Sorry, this entity type does not support limiting reference selection by bundle. <em>(bundle key in entity info not found in database table)</em>');
+    $form['bundles']['#description'] = t('Sorry, this entity does not support limiting selection by type. <em>(Bundle key ' . $entity_type_info['entity keys']['bundle'] . ' not found in database table.)</em>');
   }
 
   return $form;
