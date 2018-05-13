@@ -31,6 +31,11 @@ class ReferenceFieldAdminTest extends ReferenceFieldTestCase {
   */
   public function testFieldCreation() {
 
+    // Test that the reference field and autocomplete widget are available to add.
+    $this->backdropGet('admin/structure/types/manage/post/fields');
+    $this->assertOption('edit-fields-add-new-field-type', 'reference', 'Reference is a field type you can create.');
+    $this->assertOption('edit-fields-add-new-field-widget-type', 'reference_autocomplete', 'Autocomplete widget is available.');
+
     // Generate a random name for our test field.
     $this->field_name = strtolower($this->randomName());
 
