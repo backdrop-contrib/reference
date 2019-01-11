@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Defines a field type for referencing other entites.
@@ -291,6 +290,8 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
     '#value_callback' => 'reference_autocomplete_value',
     // Store the entity type so it can be used in the value callback.
     '#settings_entity_type' => $field['settings']['entity_type'],
+    // Length needs to be at least title length + 6. Let's + 15 for large IDs.
+    '#maxlength' => 270,
   );
   return $element;
 }
@@ -389,7 +390,7 @@ function reference_autocomplete_validate($element, &$form_state, $form) {
  */
 function reference_autocomplete_value($element, $input = FALSE, $form_state = array()) {
   // Format a default value if present and a new value has not been entered.
-  if($element['#default_value'] && $input === FALSE) {
+  if ($element['#default_value'] && $input === FALSE) {
     $target_type = $element['#settings_entity_type'];
     $target_type_info = entity_get_info($target_type);
     $target_label_property = $target_type_info['entity keys']['label'];
