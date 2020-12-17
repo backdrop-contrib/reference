@@ -156,6 +156,10 @@ function reference_field_formatter_info() {
       'label' => t('Reference link'),
       'field types' => array('reference'),
     ),
+    'reference_label' => array(
+      'label' => t('Reference title (no link)'),
+      'field types' => array('reference'),
+    ),
     'reference_rendered' => array(
       'label' => t('Rendered entity'),
       'field types' => array('reference'),
@@ -212,7 +216,10 @@ function reference_field_formatter_view($entity_type, $entity, $field, $instance
   if ($display['type'] == 'reference_link') {
     return reference_link_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
   }
-  if ($display['type'] == 'reference_rendered') {
+  elseif ($display['type'] == 'reference_label') {
+    return reference_label_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
+  }
+  elseif ($display['type'] == 'reference_rendered') {
     return reference_rendered_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
   }
 }
@@ -240,6 +247,20 @@ function reference_link_formatter_view($entity_type, $entity, $field, $instance,
         '#path' => $target_uri['path'],
         '#options' => $target_uri['options'],
       );
+    }
+  }
+  return $elements;
+}
+
+/**
+ * Called from reference_field_formatter_view() to create the formatter view.
+ */
+function reference_label_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $target_type = $field['settings']['entity_type'];
+  $elements = array();
+  foreach ($items as $delta => $target) {
+    if ($target_entity = entity_load($target_type, $target['target_id'])) {
+      $elements[$delta] = array('#markup' => $target_entity->label());
     }
   }
   return $elements;
