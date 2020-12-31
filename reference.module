@@ -276,7 +276,7 @@ function reference_rendered_formatter_view($entity_type, $entity, $field, $insta
  }
 
 /**
-  * Implements hook_field_widget_form() to provide an autocomplete form widget .
+  * Implements hook_field_widget_form() to provide an autocomplete form widget.
  */
 function reference_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $element['target_id'] = array(
@@ -301,7 +301,9 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
  */
 function reference_menu() {
   $items['reference_autocomplete'] = array(
-    'page callback' => 'reference_autocomplete_query',
+    'title' => 'Autocomplete reference',
+    'page callback' => 'reference_autocomplete',
+    'delivery callback' => 'backdrop_json_deliver',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
@@ -311,7 +313,7 @@ function reference_menu() {
 /**
  * Menu callback for providing autocomplete values to the reference fields.
  */
-function reference_autocomplete_query($field_instance = NULL, $typed = '') {
+function reference_autocomplete($field_instance = NULL, $typed = '') {
 
   // Get the info for the field and instance that is being autocompleted.
   list($field_name, $entity_type, $bundle) = explode('-', $field_instance);
@@ -334,40 +336,53 @@ function reference_autocomplete_query($field_instance = NULL, $typed = '') {
     }
   }
 
-  // Get the database table info for the target entity type.
-  $entity_info = entity_get_info($target_entity_type);
-  $base_table = $entity_info['base table'];
-  $keys = $entity_info['entity keys'];
+  // The user enters a comma-separated list of search terms. We only
+  // autocomplete the last term entered.
+  $typed = backdrop_explode_tags($typed);
+  $typed_last = backdrop_strtolower(array_pop($typed));
 
-  // Build the query of our base table using the text that has been typed in .
-  $query = db_select($base_table, 'bt')
-    ->fields('bt', array($keys['id'], $keys['label']))
-    ->condition($keys['label'], '%' . db_like($typed) . '%', 'LIKE')
-    ->orderBy($keys['label'])
-    ->range(0, 10);
-
-  // Add a condition if the entity has bundles and we are only targeting some.
-  if (!empty($keys['bundle']) && $target_entity_bundles) {
-    $query->condition($keys['bundle'], $target_entity_bundles,'IN');
-  }
-
-  // Add a condition if we are limiting results to published content.
-  if ($target_entity_status) {
-    $query->condition($keys['status'], 1,'=');
-  }
-
-  // Execute the query, format the results, and output as JSON.
-  $result = $query->execute();
   $matches = array();
-  foreach ($result as $entity) {
-    $item = reference_autocomplete_item_format($entity->{$keys['id']}, $entity->{$keys['label']});
-    $matches[$item] = $item;
-  }
-  backdrop_json_output($matches);
+  if ($typed_last != '') {
+    // Get the database table info for the target entity type.
+    $entity_info = entity_get_info($target_entity_type);
+    $base_table = $entity_info['base table'];
+    $keys = $entity_info['entity keys'];
 
-  // TO DO: Why is the echo in backdrop_json_output not disabling the theme?
-  module_invoke_all('exit');
-  exit();
+    // Build the query of our base table using the text that has been typed in .
+    $query = db_select($base_table, 'bt')
+      ->fields('bt', array($keys['id'], $keys['label']))
+      ->addTag('translatable')
+      ->condition($keys['label'], '%' . db_like($typed_last) . '%', 'LIKE')
+      ->orderBy($keys['label'])
+      ->range(0, 10);
+
+    // Do not select already entered terms.
+    if (!empty($typed)) {
+      $query->condition($keys['label'], $typed, 'NOT IN');
+    }
+
+    // Add a condition if the entity has bundles and we are only targeting some.
+    if (!empty($keys['bundle']) && $target_entity_bundles) {
+      $query->condition($keys['bundle'], $target_entity_bundles, 'IN');
+    }
+
+    // Add a condition if we are limiting results to published content.
+    if ($target_entity_status) {
+      $query->condition($keys['status'], 1, '=');
+    }
+
+    $prefix = count($typed) ? backdrop_implode_tags($typed) . ', ' : '';
+
+    // Execute the query, and format the results.
+    $result = $query->execute();
+    foreach ($result as $entity) {
+      $item = reference_autocomplete_item_format($entity->{$keys['id']}, $entity->{$keys['label']});
+      $matches[$prefix . $item] = check_plain($item);
+    }
+  }
+
+  // Displayed as JSON by delivery callback backdrop_json_deliver().
+  return $matches;
 }
 
 /**
@@ -403,7 +418,14 @@ function reference_autocomplete_value($element, $input = FALSE, $form_state = ar
  * Helper function to turn the label and value into an autocomplete item.
  */
 function reference_autocomplete_item_format($id, $label) {
-  return $label . " (" . $id . ")";
+  $l = $label;
+
+  // Labels containing commas or quotes must be wrapped in quotes.
+  if (strpos($label, ',') !== FALSE || strpos($label, '"') !== FALSE) {
+    $l = '"' . str_replace('"', '""', $label) . '"';
+  }
+
+  return $l . " (" . $id . ")";
 }
 
 /**
