@@ -125,7 +125,8 @@ function reference_field_instance_settings_form($field, $instance) {
  * Implements hook_field_is_empty() so forms know if a field is empty.
  */
 function reference_field_is_empty($item, $field) {
-  return empty($item['target_id']);
+  $empty = !isset($item['target_id']) || !is_numeric($item['target_id']);
+  return $empty;
 }
 
 /**
@@ -134,7 +135,7 @@ function reference_field_is_empty($item, $field) {
 function reference_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   foreach ($items as $delta => $item) {
     // Only validate fields that aren't empty.
-    if (!reference_field_is_empty($item, $field)) {
+    if (!reference_field_is_empty($item, $field) && $item['target_id'] !== NULL) {
       // Make sure the referenced entity exists.
       if (!entity_load($field['settings']['entity_type'], $item['target_id'])) {
         $errors[$field['field_name']][$langcode][$delta][] = array(
@@ -398,7 +399,7 @@ function reference_autocomplete_validate($element, &$form_state, $form) {
       form_set_value($element, $id, $form_state);
     }
     else {
-      form_set_value($element, "", $form_state);
+      form_set_value($element, '', $form_state);
       form_error($element, t('You must select an option from the autocomplete dropdown.'));
     }
   }
