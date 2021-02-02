@@ -5,6 +5,27 @@
  */
 
 /**
+ * Implements hook_autoload_info().
+ */
+function reference_autoload_info() {
+  return array(
+    'reference_plugin_display' => 'views/reference_plugin_display.inc',
+    'reference_plugin_row_fields' => 'views/reference_plugin_row_fields.inc',
+    'reference_plugin_style' => 'views/reference_plugin_style.inc',
+  );
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function reference_views_api() {
+  return array(
+    'api' => 3,
+    'path' => backdrop_get_path('module', 'reference') . '/views',
+  );
+}
+
+/**
  * Implements hook_entity_info_alter().
  *
  * @todo: Patch core entities to have each provide its own values.
@@ -125,7 +146,7 @@ function reference_field_instance_settings_form($field, $instance) {
  * Implements hook_field_is_empty() so forms know if a field is empty.
  */
 function reference_field_is_empty($item, $field) {
-  $empty = !isset($item['target_id']) || !is_numeric($item['target_id']);
+  $empty = !isset($item['target_id']) || empty($item['target_id']);
   return $empty;
 }
 
@@ -463,25 +484,4 @@ function reference_autocomplete_item_extract_id($value) {
   }
   preg_match('/.*\(([0-9]*)\)$/', $value, $matches);
   return isset($matches[1]) ? $matches[1] : false;
-}
-
-/**
- * Implements hook_field_views_data().
- */
-function reference_field_views_data($field) {
-  // Get info for the entity type this field references to add a relationship.
-  $target_info = entity_get_info($field['settings']['entity_type']);
-  // Get the default values of the views config data for this field.
-  $data = field_views_field_default_views_data($field);
-  // Alter data for both the field_data and field_revision tables.
-  foreach ($data as $table_name => $table_data) {
-    // Add a relationship to the target table from the [field_name]_target_id.
-    $data[$table_name][$field['field_name'] . '_target_id']['relationship'] = array(
-      'handler' => 'views_handler_relationship',
-      'base' => $target_info['base table'],
-      'base field' => $target_info['entity keys']['id'],
-      'label' => t('!type referenced by !field_name', array('!type' => $target_info['label'], '!field_name' => $field['field_name'])),
-    );
-  }
-  return $data;
 }
