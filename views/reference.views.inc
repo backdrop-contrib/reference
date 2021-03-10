@@ -66,7 +66,7 @@ function reference_field_views_data_views_data_alter(&$data, $field) {
           'base' => $entity_info['base table'],
           'base field' => $entity_info['entity keys']['id'],
           'label' => t('@entity referencing @target_entity from !field_name', $replacements),
-          'group' => t('Entity Reference'),
+          'group' => t('Reference'),
           'title' => t('Reference from'),
           'help' => t('A bridge to the @entity that has @target_entity in its field <em>!field_name</em>', $replacements),
           'join_extra' => array(
@@ -84,4 +84,54 @@ function reference_field_views_data_views_data_alter(&$data, $field) {
       }
     }
   }
+}
+
+/**
+ * Implements hook_views_plugins().
+ */
+function reference_views_plugins() {
+  $plugins = array(
+    'display' => array(
+      'reference' => array(
+        'title' => t('Entity Reference'),
+        'admin' => t('Entity Reference Source'),
+        'help' => 'Selects referenceable entities for an entity reference field',
+        'handler' => 'reference_plugin_display',
+        'uses hook menu' => FALSE,
+        'use ajax' => FALSE,
+        'use pager' => FALSE,
+        'accept attachments' => FALSE,
+        // Custom property, used with views_get_applicable_views() to retrieve
+        // all views with a 'Entity Reference' display.
+        'reference display' => TRUE,
+      ),
+    ),
+    'style' => array(
+      'reference_style' => array(
+        'title' => t('Entity Reference list'),
+        'help' => 'Returns results as a PHP array of labels and rendered rows.',
+        'handler' => 'reference_plugin_style',
+        'theme' => 'views_view_unformatted',
+        'uses row plugin' => TRUE,
+        'uses fields' => TRUE,
+        'uses options' => TRUE,
+        'type' => 'reference',
+        'even empty' => TRUE,
+      ),
+    ),
+    'row' => array(
+      'reference_fields' => array(
+        'title' => t('Inline fields'),
+        'help' => t('Displays the fields with an optional template.'),
+        'handler' => 'reference_plugin_row_fields',
+        'theme' => 'views_view_fields',
+        'theme path' => backdrop_get_path('module', 'views') . '/theme',
+        'theme file' => 'theme.inc',
+        'uses fields' => TRUE,
+        'uses options' => TRUE,
+        'type' => 'reference',
+      ),
+    ),
+  );
+  return $plugins;
 }
