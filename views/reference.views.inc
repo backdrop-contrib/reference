@@ -66,7 +66,7 @@ function reference_field_views_data_views_data_alter(&$data, $field) {
           'base' => $entity_info['base table'],
           'base field' => $entity_info['entity keys']['id'],
           'label' => t('@entity referencing @target_entity from !field_name', $replacements),
-          'group' => t('Entity Reference'),
+          'group' => t('Reference'),
           'title' => t('Reference from'),
           'help' => t('A bridge to the @entity that has @target_entity in its field <em>!field_name</em>', $replacements),
           'join_extra' => array(
