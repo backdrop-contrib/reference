@@ -59,8 +59,10 @@ function reference_field_info() {
         'entity_type' => 'node',
       ),
       'instance_settings' => array(
+        'filter_type' => '',
         'bundles' => array(),
         'status' => '',
+        'view' => '',
       ),
       'default_widget' => 'reference_autocomplete',
       'default_formatter' => 'reference_link',
@@ -99,14 +101,33 @@ function reference_field_settings_form($field, $instance, $has_data) {
  * Implements hook_field_instance_settings_form() for setting instance options.
  */
 function reference_field_instance_settings_form($field, $instance) {
-  $entity_type_info = entity_get_info($field['settings']['entity_type']);
+  $entity_type = $field['settings']['entity_type'];
+  $entity_type_info = entity_get_info($entity_type);
+
   $form = array();
+
+  $form['filter_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Method to filter entities'),
+    '#options' => array(
+      'simple' => t('Use simple filters'),
+      'view' => t('Use a view to filter which entities can be selected'),
+    ),
+    '#default_value' => !empty($instance['settings']['filter_type']) ? $instance['settings']['filter_type'] : 'simple',
+  );
 
   // Allow the reference options to be filtered by entity status.
   $form['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('Limit to published content'),
     '#default_value' =>  $instance['settings']['status'],
+    '#states' => array(
+      'visible' => array(
+        'select[name="instance[settings][filter_type]"]' => array(
+          'value' => 'simple',
+        ),
+      ),
+    ),
   );
   // Ensure that the entity type has registered its status key in entity info .
   if(!isset($entity_type_info['entity keys']['status']) || empty($entity_type_info['entity keys']['status'])) {
@@ -127,6 +148,13 @@ function reference_field_instance_settings_form($field, $instance) {
     '#multiple' => TRUE,
     '#default_value' =>  $instance['settings']['bundles'] ? $instance['settings']['bundles'] : array(),
     '#description' => t('Leave unchecked to allow all types to be referenced.'),
+    '#states' => array(
+      'visible' => array(
+        'select[name="instance[settings][filter_type]"]' => array(
+          'value' => 'simple',
+        ),
+      ),
+    ),
   );
   // Ensure that the entity type has registered its bundle key in entity info.
   if(!isset($entity_type_info['entity keys']['bundle']) || empty($entity_type_info['entity keys']['bundle'])) {
@@ -139,7 +167,60 @@ function reference_field_instance_settings_form($field, $instance) {
     $form['bundles']['#description'] = t('Sorry, this entity does not support limiting selection by type. <em>(Bundle key ' . $entity_type_info['entity keys']['bundle'] . ' not found in database table.)</em>');
   }
 
+  $form['view'] = array(
+    '#type' => 'select',
+    '#title' => t('Select the view to use for filtering'),
+    '#default_value' => $instance['settings']['view'],
+    '#states' => array(
+      'visible' => array(
+        'select[name="instance[settings][filter_type]"]' => array(
+          'value' => 'view',
+        ),
+      ),
+    ),
+  );
+  $views = reference_get_views_options($entity_type);
+  if (!empty($views)) {
+    $form['view']['#options'] = $views;
+  }
+  else {
+    $form['view']['#options'] = array();
+    $form['view']['#disabled'] = TRUE;
+    $label = isset($entity_type_info['plural label']) ? $entity_type_info['plural label'] : $entity_type_info['label'];
+    $form['view']['#description'] = t("There are no views for %label that have a 'reference' display", array(
+      '%label' => $label,
+    ));
+  }
+
   return $form;
+}
+
+/**
+ * Retrieves the list of views with a 'reference' display, in a format suitable for a 'select' form element..
+ *
+ * @param $entity_type
+ *   The entity type.
+ *
+ * @return
+ *   An array of eligible views displays.
+ */
+function reference_get_views_options($entity_type) {
+  // Filter views that contain a 'reference' display. This actually returns a
+  // list of displays (the same view appears several times).
+  $displays = views_get_applicable_views('reference display');
+
+  // Filter views that list the entity type we want, and group the separate
+  // displays by view.
+  $entity_info = entity_get_info($entity_type);
+  $options = array();
+  foreach ($displays as $data) {
+    list($view, $display_id) = $data;
+    if ($view->base_table == $entity_info['base table']) {
+      $options[$view->name . ':' . $display_id] = $view->name .' - ' . $view->display[$display_id]->display_title;
+    }
+  }
+
+  return $options;
 }
 
 /**
@@ -361,9 +442,9 @@ function reference_menu() {
  * Menu callback for providing autocomplete values to the reference fields.
  */
 function reference_autocomplete($field_instance = NULL, $typed = '') {
-
   // Get the info for the field and instance that is being autocompleted.
   list($field_name, $entity_type, $bundle) = explode('-', $field_instance);
+  $entity_info = entity_get_info($entity_type);
   $field_info = field_info_field($field_name);
   $field_instance_info = field_info_instance($entity_type, $field_name, $bundle);
 
@@ -376,6 +457,7 @@ function reference_autocomplete($field_instance = NULL, $typed = '') {
   // Determine our target entity parameters based on the field settings.
   $target_entity_type = $field_info['settings']['entity_type'];
   $target_entity_status = $field_instance_info['settings']['status'];
+
   $target_entity_bundles = array();
   foreach ($field_instance_info['settings']['bundles'] as $bundle => $active) {
     if ($active) {
@@ -390,42 +472,106 @@ function reference_autocomplete($field_instance = NULL, $typed = '') {
 
   $matches = array();
   if ($typed_last != '') {
-    // Get the database table info for the target entity type.
-    $entity_info = entity_get_info($target_entity_type);
-    $base_table = $entity_info['base table'];
-    $keys = $entity_info['entity keys'];
+    switch ($field_instance_info['settings']['filter_type']) {
+      case 'simple':
+        // Get the database table info for the target entity type.
+        $entity_info = entity_get_info($target_entity_type);
+        $base_table = $entity_info['base table'];
+        $keys = $entity_info['entity keys'];
 
-    // Build the query of our base table using the text that has been typed in .
-    $query = db_select($base_table, 'bt')
-      ->fields('bt', array($keys['id'], $keys['label']))
-      ->addTag('translatable')
-      ->condition($keys['label'], '%' . db_like($typed_last) . '%', 'LIKE')
-      ->orderBy($keys['label'])
-      ->range(0, 10);
+        // Build the query of our base table using the text that has been typed in .
+        $query = db_select($base_table, 'bt')
+          ->fields('bt', array($keys['id'], $keys['label']))
+          ->addTag('translatable')
+          ->condition($keys['label'], '%' . db_like($typed_last) . '%', 'LIKE')
+          ->orderBy($keys['label'])
+          ->range(0, 10);
 
-    // Do not select already entered terms.
-    if (!empty($typed)) {
-      $query->condition($keys['label'], $typed, 'NOT IN');
+        // Do not select already entered terms.
+        if (!empty($typed)) {
+          $query->condition($keys['label'], $typed, 'NOT IN');
+        }
+
+        // Add a condition if the entity has bundles and we are only targeting some.
+        if (!empty($keys['bundle']) && $target_entity_bundles) {
+          $query->condition($keys['bundle'], $target_entity_bundles, 'IN');
+        }
+
+        // Add a condition if we are limiting results to published content.
+        if ($target_entity_status) {
+          $query->condition($keys['status'], 1, '=');
+        }
+
+        $prefix = count($typed) ? backdrop_implode_tags($typed) . ', ' : '';
+
+        // Execute the query, and format the results.
+        $result = $query->execute();
+        foreach ($result as $entity) {
+          $item = reference_autocomplete_item_format($entity->{$keys['id']}, $entity->{$keys['label']});
+          $matches[$prefix . $item] = check_plain($item);
+        }
+        break;
+
+      case 'view':
+          // Check that the view is valid and the display still exists.
+          list($view_name, $display_name) = explode(':', $field_instance_info['settings']['view']);
+          $view = views_get_view($view_name);
+          if (!$view || $view->base_table != $entity_info['base table'] || !isset($view->display[$display_name])) {
+            return FALSE;
+          }
+
+          // If we have no access to the View an empty result should be returned to
+          // avoid triggering the fallback results.
+          if  (!$view->access(array($display_name))) {
+            return array();
+          }
+
+          $view->set_display($display_name);
+
+          // Set additional options to let reference_plugin_display::query() narrow
+          // the results.
+          $options = array(
+            'match' => $typed_last,
+            'match_operator' => 'CONTAINS',
+            'ids' => array(),
+            'limit' => 10,
+            'title_field' => 'title',
+          );
+
+          $view->display_handler->set_option('reference_options', $options);
+
+          // We need the title field for autocomplete widgets, so add it (hidden) if not
+          // present.
+          $fields = $view->get_items('field', $display_name);
+          if (!isset($fields[$options['title_field']])) {
+            $label_options = array(
+              'exclude' => 1,
+            );
+            $view->add_item($display_name, 'field', $entity_info['base table'], $options['title_field'], $label_options);
+          }
+
+          // Limit result set size.
+          $limit = !empty($options['limit']) ? $options['limit'] : 0;
+          $view->display_handler->set_option('pager', array('type' => 'some', 'options' => array('items_per_page' => $limit)));
+
+          // Make sure the query is not cached
+          $view->is_cacheable = FALSE;
+
+          // Get the results.
+          $results = $view->execute_display($display_name);
+          $entities = entity_load($target_entity_type, array_keys($results));
+
+          $matches = array();
+          foreach ($entities as $id => $entity) {
+            $label = entity_label($target_entity_type, $entity);
+            $matches[$label . ' (' . $id . ')'] = $label;
+          }
+        break;
+
+      default:
+        break;
     }
 
-    // Add a condition if the entity has bundles and we are only targeting some.
-    if (!empty($keys['bundle']) && $target_entity_bundles) {
-      $query->condition($keys['bundle'], $target_entity_bundles, 'IN');
-    }
-
-    // Add a condition if we are limiting results to published content.
-    if ($target_entity_status) {
-      $query->condition($keys['status'], 1, '=');
-    }
-
-    $prefix = count($typed) ? backdrop_implode_tags($typed) . ', ' : '';
-
-    // Execute the query, and format the results.
-    $result = $query->execute();
-    foreach ($result as $entity) {
-      $item = reference_autocomplete_item_format($entity->{$keys['id']}, $entity->{$keys['label']});
-      $matches[$prefix . $item] = check_plain($item);
-    }
   }
 
   // Displayed as JSON by delivery callback backdrop_json_deliver().
