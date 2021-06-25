@@ -254,6 +254,17 @@ function reference_field_validate($entity_type, $entity, $field, $instance, $lan
 }
 
 /**
+ * Implements hook_field_insert().
+ */
+function reference_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  foreach ($items as $delta => $item) {
+    if (reference_field_is_empty($item, $field)) {
+      unset($items[$delta]);
+    }
+  }
+}
+
+/**
  * Implements hook_field_formatter_info() to register the field formatter.
  */
 function reference_field_formatter_info() {
