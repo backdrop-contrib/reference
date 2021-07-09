@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Install, update and uninstall functions for the reference module.
+ * Install, update, and uninstall functions for the reference module.
  */
 
 /**
@@ -23,3 +22,148 @@ function reference_field_schema($field) {
     ),
   );
 }
+
+/**
+ * Implements hook_install().
+ */
+function reference_install() {
+  // Reset schema version, so update hooks can be processed after installation.
+  backdrop_set_installed_schema_version('reference', '0');
+}
+
+/**
+ * Helper function to update field base settings.
+ */
+function _reference_install_update_field_base_settings($settings, $target_enity_type) {
+  $settings['module'] = 'reference';
+  $settings['type'] = 'reference';
+
+  // Discard all settings except target entity type.
+  $settings['settings'] = array(
+    'entity_type' => $target_enity_type,
+  );
+
+  return $settings;
+}
+
+/**
+ * Helper function to update field instance settings.
+ */
+function _reference_install_update_field_instance_settings($settings, array $bundles) {
+  // Convert field instance.
+  $settings['widget']['module'] = 'reference';
+
+  // Always set widget type to 'reference_autocomplete'; there is no
+  // 'entityreference_autocomplete_tags' option in reference module.
+  $settings['widget']['type'] = 'reference_autocomplete';
+
+  // Remove widget settings; no longer used.
+  $settings['widget']['settings'] = array();
+
+  // Change widget to active.
+  $settings['widget']['active'] = 1;
+
+  // Add missing key.
+  $settings['default_value_function'] = NULL;
+
+  // Move bundle filtering to instance settings.
+  $settings['settings']['bundles'] = $bundles;
+
+  return $settings;
+}
+
+/**
+ * Convert entityreference fields to reference fields.
+ */
+function reference_update_1000() {
+  $schema_version = db_query("SELECT schema_version FROM {system} WHERE name = 'entityreference'")->fetchField();
+  $convert = FALSE;
+  $message = t('No entityreference fields have been converted to reference fields in this update.');
+
+  if (substr($schema_version, 0, 1) == 7) {
+    // Upgrading from Drupal 7, convert fields.
+    $convert = TRUE;
+  }
+  elseif (substr($schema_version, 0, 1) == 1) {
+    // Upgrading from Previous Backdrop version of entityreference module.
+    $convert = settings_get('reference_convert_entityreference', FALSE);
+  }
+
+  if ($convert) {
+    $count = 0;
+    $names = config_get_names_with_prefix('field.instance.');
+    foreach ($names as $name) {
+      // Load field base settings first.
+      list(, , , , $field_name) = explode('.', $name);
+      $field_config = config('field.field.' . $field_name);
+      $field_settings = $field_config->get();
+
+      if ($field_settings['type'] == 'entityreference') {
+        $count++;
+        $config = config($name);
+        $settings = $config->get();
+        $settings = _reference_install_update_field_instance_settings($settings, $field_settings['settings']['handler_settings']['target_bundles']);
+
+        // Set field formatter.
+        $settings['display']['default']['module'] = 'reference';
+        switch ($settings['display']['default']['type']) {
+          case 'entityreference_entity_view':
+            $settings['display']['default']['type'] = 'reference_rendered';
+            $settings['display']['default']['settings'] = array(
+              'view_mode' => isset($settings['display']['default']['settings']['view_mode']) ? $settings['display']['default']['settings']['view_mode'] : 'full',
+            );
+            break;
+
+          case 'entityreference_label':
+          case 'entityreference_entity_id':
+          default:
+            // If custom formatter is used, reset to default formatter.
+            $settings['display']['default']['type'] = 'reference_link';
+            $settings['display']['default']['settings'] = array();
+        }
+
+        // Before saving, convert field base (we first had to move some old
+        // field base settings into the instance settings).
+        $field_settings = _reference_install_update_field_base_settings($field_settings, $field_settings['settings']['target_type']);
+        $field_config->setData($field_settings);
+        $field_config->save();
+
+        // Now save field instance settings.
+        $config->setData($settings);
+        $config->save();
+      }
+    }
+
+    $message = t(':count entityreference fields have been converted to reference fields in this update.', array(':count' => $count));
+
+    // Clear caches to ensure updated fields are loaded.
+    /* @todo Invoking field_cache_clear() doesn't refresh fields in UI. */
+    field_cache_clear();
+  }
+
+  $return = $message;
+}
+
+/**
+ * Helper function to update field instance settings.
+ */
+function _reference_install_change_field($field_name, $field_name_old) {
+  if (db_table_exists('field_data_' . $field_name)) {
+    $spec = array(
+      'description' => 'The entity id of the target entity.',
+      'type'        => 'int',
+      'unsigned'    => TRUE,
+      'not null'    => TRUE,
+    );
+    $indexes = array(
+      'indexes' => array(
+        $field_name . '_target_id' => array($field_name . '_target_id'),
+      ),
+    );
+    db_drop_index('field_data_' . $field_name, $field_name_old);
+    db_change_field('field_data_' . $field_name, $field_name_old, $field_name . '_target_id', $spec, $indexes);
+    db_drop_index('field_data_' . $field_name, $field_name_old);
+    db_change_field('field_revision_' . $field_name, $field_name_old, $field_name . '_target_id', $spec, $indexes);
+  }
+}
+
