@@ -439,11 +439,12 @@ function reference_field_widget_form(&$form, &$form_state, $field, $instance, $l
  * Implements hook_menu() to provide autocomplete callback.
  */
 function reference_menu() {
-  $items['reference_autocomplete'] = array(
+  $items['reference_autocomplete/%'] = array(
     'title' => 'Autocomplete reference',
     'page callback' => 'reference_autocomplete',
     'delivery callback' => 'backdrop_json_deliver',
-    'access arguments' => array('access content'),
+    'access callback' => 'entity_access',
+    'access arguments' => array('view', 0),
     'type' => MENU_CALLBACK,
   );
   return $items;
