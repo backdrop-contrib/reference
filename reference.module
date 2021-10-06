@@ -570,12 +570,8 @@ function reference_autocomplete($field_instance = NULL, $typed = '') {
 
           // Get the results.
           $results = $view->execute_display($display_name);
-          $entities = entity_load($target_entity_type, array_keys($results));
-
-          $matches = array();
-          foreach ($entities as $id => $entity) {
-            $label = entity_label($target_entity_type, $entity);
-            $matches[$label . ' (' . $id . ')'] = $label;
+          foreach ($results as $id => $label) {
+            $matches[trim(strip_tags($label)) . ' (' . $id . ')'] = $label;
           }
         break;
 
