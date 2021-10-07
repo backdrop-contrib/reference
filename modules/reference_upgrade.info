@@ -1,0 +1,10 @@
+type = module
+name = Reference Upgrade
+description = Upgrade path from various Drupal 7 reference types.
+package = Fields
+backdrop = 1.x
+
+dependencies[] = field
+dependencies[] = entity
+
+configure = admin/content/reference/upgrade
