@@ -387,6 +387,8 @@ function reference_label_formatter_view($entity_type, $entity, $field, $instance
  * Called from reference_field_formatter_view() to create the formatter view.
  */
 function reference_rendered_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  static $unique_references_rendered = array();
+
   $target_type = $field['settings']['entity_type'];
   $elements = array();
   // We need to guess the view function until $entity->view() is created.
@@ -394,6 +396,22 @@ function reference_rendered_formatter_view($entity_type, $entity, $field, $insta
   $view_function = $target_type . "_view";
   if (function_exists($view_function)) {
     foreach ($items as $delta => $target) {
+      $unique_reference_key = implode(':', array(
+        $entity_type,
+        $entity->id(),
+        $target_type,
+        $target['target_id'],
+      ));
+
+      // Display a message if this is a duplicate reference.
+      if (isset($unique_references_rendered[$unique_reference_key])) {
+        backdrop_set_message(t('Stopped rendering of reference because it was renderd by this entity already.'), 'info');
+        continue;
+      }
+
+      // This must be set before trying to render the entity so it doesn't loop.
+      $unique_references_rendered[$unique_reference_key] = TRUE;
+
       $target_entity = entity_load($target_type, $target['target_id']);
       $elements[] = call_user_func($view_function, $target_entity, $display['settings']['view_mode'], $langcode);
       // To-do: different arguments for comments.
