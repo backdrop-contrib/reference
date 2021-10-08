@@ -196,7 +196,8 @@ function reference_field_instance_settings_form($field, $instance) {
 }
 
 /**
- * Retrieves the list of views with a 'reference' display, in a format suitable for a 'select' form element..
+ * Retrieves the list of views with a 'reference' display, in a format suitable
+ * for a 'select' form element.
  *
  * @param $entity_type
  *   The entity type.
@@ -420,17 +421,147 @@ function reference_rendered_formatter_view($entity_type, $entity, $field, $insta
   return $elements;
 }
 
- /**
-  * Implements hook_field_widget_info() to define an autocomplete form widget.
-  */
- function reference_field_widget_info() {
-   return array(
-     'reference_autocomplete' => array(
-       'label' => t('Autocomplete'),
-       'field types' => array('reference'),
-     ),
-   );
- }
+/**
+ * Implements hook_field_widget_info() to define an autocomplete form widget.
+ */
+function reference_field_widget_info() {
+  return array(
+    'reference_autocomplete' => array(
+      'label' => t('Autocomplete'),
+      'field types' => array('reference'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_info_alter() to enable reference options.
+ */
+function reference_field_widget_info_alter(&$info) {
+  if (module_exists('options')) {
+    $info['options_select']['field types'][] = 'reference';
+    $info['options_buttons']['field types'][] = 'reference';
+  }
+}
+
+/**
+ * Provides values for the reference field.
+ *
+ * @param array $field_instance
+ *   Configiration for the field instance.
+ * @param string $filter
+ *   @todo
+ * @param int $limit
+ *   @todo
+ *
+ * @return array
+ *   Reference results that match the query.
+ */
+function reference_query($field_instance, $filter = '', $limit = 0) {
+  // Load field info.
+  $field = field_info_field($field_instance['field_name']);
+
+  // Determine our target entity parameters based on the field settings.
+  $target_entity_type = $field['settings']['entity_type'];
+  $target_entity_status = $field_instance['settings']['status'];
+  $target_entity_bundles = array();
+  foreach ($field_instance['settings']['bundles'] as $bundle => $active) {
+    if ($active) {
+      $target_entity_bundles[] = $bundle;
+    }
+  }
+
+  // Build the query of our base table using the text that has been typed in .
+  $query = db_select($base_table, 'bt')
+    ->fields('bt', array($keys['id'], $keys['label']))
+    ->orderBy($keys['label']);
+
+  // Add limit if specified.
+  if (!empty($filter)) {
+    $query->condition($keys['label'], '%' . db_like($filter) . '%', 'LIKE');
+  }
+
+  // Add limit if specified.
+  if ($limit > 0) {
+    $query->range(0, $limit);
+  }
+
+  // Add a condition if the entity has bundles and we are only targeting some.
+  if (!empty($keys['bundle']) && $target_entity_bundles) {
+    $query->condition($keys['bundle'], $target_entity_bundles, 'IN');
+  }
+
+  // Add a condition if we are limiting results to published content.
+  if ($target_entity_status) {
+    $query->condition($keys['status'], 1, '=');
+  }
+
+  // Execute the query, return results.
+  $result = $query->execute();
+  $matches = array();
+  foreach ($result as $entity) {
+    $matches[$entity->{$keys['id']}] = $entity->{$keys['label']};
+  }
+
+  return $matches;
+}
+
+/**
+ * Implements hook_options_list() to provide options for options module.
+ */
+function reference_options_list($field, $instance = NULL, $entity_type = NULL, $entity = NULL) {
+  if ($field['settings']['entity_type'] == 'taxonomy_term') {
+    return reference_options_list_taxonomy_term($instance);
+  }
+  else {
+    return reference_query($instance);
+  }
+}
+
+/**
+ * Callback to build a list of taxonomy terms.
+ *
+ * @param array $field_instance
+ *   Field instance configuration
+ * @param string  $filter
+ * @param integer $limit
+ *
+ * @return array
+ *   Array of options suitable for use in an autocomplete.
+ */
+function reference_options_list_taxonomy_term($field_instance, $filter = '', $limit = 0) {
+  if ($filter || $limit) {
+    return reference_query($field_instance, $filter, $limit);
+  }
+
+  $options = array();
+
+  $entity_info = entity_get_info('taxonomy_term');
+
+  // Get allowed bundles.
+  $bundles = array();
+  foreach ($field_instance['settings']['bundles'] as $bundle => $active) {
+    if ($active) {
+      $bundles[] = $bundle;
+    }
+  }
+  if (empty($bundles)) {
+    $bundles = array_keys($entity_info['bundles']);
+  }
+
+  // We imitate core by calling taxonomy_get_tree().
+  foreach ($bundles as $bundle) {
+    if ($vocabulary = taxonomy_vocabulary_load($bundle)) {
+      if ($terms = taxonomy_get_tree($vocabulary->machine_name, 0, NULL, TRUE)) {
+        /** @var \TaxonomyTerm $term */
+        foreach ($terms as $term) {
+          $options[$vocabulary->name][$term->tid] = str_repeat('-', $term->depth) . check_plain($term->label());
+        }
+      }
+    }
+  }
+
+  return count($bundles) == 1 ? reset($options) : $options;
+}
 
 /**
   * Implements hook_field_widget_form() to provide an autocomplete form widget.
@@ -601,6 +732,30 @@ function reference_autocomplete($field_instance = NULL, $typed = '') {
 
   // Displayed as JSON by delivery callback backdrop_json_deliver().
   return $matches;
+}
+
+/**
+ * Menu callback for providing autocomplete values to the reference fields.
+ */
+function reference_autocomplete_query($field_instance = NULL, $typed = '') {
+  // Get the info for the field and instance that is being autocompleted.
+  list($field_name, $entity_type, $bundle) = explode('-', $field_instance);
+  $field_instance_info = field_info_instance($entity_type, $field_name, $bundle);
+
+  // If valid field or entity names were not provided return access denied.
+  if (!$field_instance_info) {
+    backdrop_add_http_header('Status', '403 Forbidden');
+    backdrop_exit();
+  }
+
+  $items = reference_query($field_instance_info, $typed, 10);
+
+  $matches = array();
+  foreach ($items as $id => $label) {
+    $item = reference_autocomplete_item_format($id, $label);
+    $matches[$item] = $item;
+  }
+  backdrop_json_output($matches);
 }
 
 /**
