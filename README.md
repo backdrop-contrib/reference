@@ -3,9 +3,15 @@ Reference
 
 Defines a field type to let entities reference other entities in Backdrop.
 
-This module is the sucessor to both references and entity_reference in Drupal 7,
-and will one day include all the features from both, along with an upgrade path.
-When that has been accomplished, this module will be moved into Backdrop core.
+This module was once assumed to be a candidate for inclusion in core. However, 
+since version 1.23 the Entity Reference module has been included in core and 
+this module is no longer a candidate for core.
+
+https://backdropcms.org/project/entityreference
+
+We recommend that you use the Entity Reference module in core for your future
+reference field requirements. Entity Reference is not enabled by default at this
+time, you may need to enable Entity Reference first.
 
 
 Warning
