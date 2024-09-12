@@ -1,0 +1,253 @@
+<?php
+/**
+ * @file
+ * Upgrade path from various Drupal 7 reference types.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function reference_upgrade_menu() {
+  $items['admin/content/reference/upgrade'] = array(
+    'title' => 'Reference Upgrade',
+    'page callback' => 'reference_upgrade_admin',
+    'access arguments' => array('administer fields'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'reference_upgrade.admin.inc',
+  );
+  $items['admin/content/reference/upgrade/%'] = array(
+    'title' => 'Upgrade Reference Type',
+    'page callback' => 'reference_upgrade_fieldtype',
+    'page arguments' => array(4),
+    'access arguments' => array('administer fields'),
+    'type' => MENU_CALLBACK,
+    'file' => 'reference_upgrade.admin.inc',
+  );
+  /* @todo
+  $items['admin/content/reference/upgrade/%/%'] = array(
+    'title' => 'Upgrade Reference Field',
+    'page callback' => 'reference_upgrade_fieldname',
+    'page arguments' => array(4, 5),
+    'access arguments' => array('administer fields'),
+    'type' => MENU_CALLBACK,
+    'file' => 'reference_upgrade.admin.inc',
+  );
+  */
+
+  return $items;
+}
+
+/**
+ * Convert entityreference fields into reference fields.
+ */
+function _reference_upgrade_convert_entityreference() {
+  $count = 0;
+  $names = config_get_names_with_prefix('field.instance.');
+  foreach ($names as $name) {
+    // Load field instance settings first.
+    list(, , , , $field_name) = explode('.', $name);
+    $field_config = config('field.field.' . $field_name);
+    $field_settings = $field_config->get();
+
+    if ($field_settings['type'] == 'entityreference') {
+      $count++;
+      $instance_config = config($name);
+      $instance_settings = $instance_config->get();
+
+      $bundles = array();
+      if (isset($field_settings['settings']['handler_settings']['target_bundles'])) {
+        $bundles = $field_settings['settings']['handler_settings']['target_bundles'];
+      }
+      _reference_upgrade_convert_field_instance_settings($instance_settings, $bundles);
+
+      // Set field formatter.
+      $instance_settings['display']['default']['module'] = 'reference';
+      switch ($instance_settings['display']['default']['type']) {
+        case 'entityreference_entity_view':
+          $instance_settings['display']['default']['type'] = 'reference_rendered';
+          $instance_settings['display']['default']['settings'] = array(
+            'view_mode' => isset($instance_settings['display']['default']['settings']['view_mode']) ? $instance_settings['display']['default']['settings']['view_mode'] : 'full',
+          );
+          break;
+
+        case 'entityreference_label':
+        case 'entityreference_entity_id':
+        default:
+          // If custom formatter is used, reset to default formatter.
+          $instance_settings['display']['default']['type'] = 'reference_link';
+          $instance_settings['display']['default']['settings'] = array();
+      }
+
+      // Before saving, convert field base (we first had to move some old
+      // field base settings into the instance settings).
+      _reference_upgrade_convert_field_base_settings($field_settings, $field_settings['settings']['target_type']);
+      $field_config->setData($field_settings);
+      $field_config->save();
+
+      // Now save field instance settings.
+      $instance_config->setData($instance_settings);
+      $instance_config->save();
+
+      // Clear caches to ensure updated fields are loaded.
+      field_cache_clear();
+      /* @todo Invoking field_cache_clear() doesn't refresh fields in UI. */
+      cache_clear_all();
+    }
+  }
+}
+
+/**
+ * Convert user_reference fields into reference fields.
+ */
+function _reference_upgrade_convert_user_reference() {
+  $field_config = config('field.field.' . $field_name);
+  $instance_settings = $field_config->get();
+
+  // User entities don't use bundles.
+  $bundles = array();
+  _reference_upgrade_convert_field_instance_settings($instance_settings, $bundles);
+
+  // Set field formatter.
+  $instance_settings['display']['default']['module'] = 'reference';
+  switch ($instance_settings['display']['default']['type']) {
+    case 'user_reference_user':
+      $instance_settings['display']['default']['type'] = 'reference_rendered';
+      $instance_settings['display']['default']['settings'] = array(
+        'view_mode' => isset($instance_settings['display']['default']['settings']['node_reference_view_mode']) ? $instance_settings['display']['default']['settings']['node_reference_view_mode'] : 'full',
+      );
+      break;
+
+    case 'user_reference_default':
+    case 'user_reference_plain':
+    case 'user_reference_uid':
+    case 'user_reference_path':
+    default:
+      // If custom formatter is used, reset to default formatter.
+      $instance_settings['display']['default']['type'] = 'reference_link';
+      $instance_settings['display']['default']['settings'] = array();
+  }
+
+  // Before saving, convert field base (we first had to move some old
+  // field base settings into the instance settings).
+  _reference_upgrade_convert_field_base_settings($field_settings, 'user');
+  $field_config->setData($field_settings);
+  $field_config->save();
+
+  // Now save field instance settings.
+  $instance_config->setData($instance_settings);
+  $instance_config->save();
+
+  // Updated db field name.
+  _reference_install_change_field($field_settings['field_name'], $field_settings['field_name'] . '_uid');
+
+  // Clear caches to ensure updated fields are loaded.
+  field_cache_clear();
+  /* @todo Invoking field_cache_clear() doesn't refresh fields in UI. */
+  cache_clear_all();
+}
+
+/**
+ * Convert node_reference fields into reference fields.
+ */
+function _reference_upgrade_convert_node_reference() {
+  $field_config = config('field.field.' . $field_name);
+  $field_settings = $field_config->get();
+
+  $bundles = $field_settings['settings']['referenceable_types'];
+  _reference_upgrade_convert_field_instance_settings($instance_settings, $bundles);
+
+  // Set field formatter.
+  $instance_settings['display']['default']['module'] = 'reference';
+  switch ($instance_settings['display']['default']['type']) {
+    case 'node_reference_node':
+      $instance_settings['display']['default']['type'] = 'reference_rendered';
+      $instance_settings['display']['default']['settings'] = array(
+        'view_mode' => isset($instance_settings['display']['default']['settings']['node_reference_view_mode']) ? $instance_settings['display']['default']['settings']['node_reference_view_mode'] : 'full',
+      );
+      break;
+
+    case 'node_reference_default':
+    case 'node_reference_plain':
+    case 'node_reference_nid':
+    case 'node_reference_path':
+    default:
+      // If custom formatter is used, reset to default formatter.
+      $instance_settings['display']['default']['type'] = 'reference_link';
+      $instance_settings['display']['default']['settings'] = array();
+      break;
+  }
+
+  // Before saving, convert field base (we first had to move some old
+  // field base settings into the instance settings).
+  _reference_upgrade_convert_field_base_settings($field_settings, 'node');
+  $field_config->setData($field_settings);
+  $field_config->save();
+
+  // Now save field instance settings.
+  $instance_config->setData($instance_settings);
+  $instance_config->save();
+
+  // Updated db field name.
+  _reference_install_change_field($field_settings['field_name'], $field_settings['field_name'] . '_nid');
+
+  // Clear caches to ensure updated fields are loaded.
+  field_cache_clear();
+  /* @todo Invoking field_cache_clear() doesn't refresh fields in UI. */
+  cache_clear_all();
+}
+
+/**
+ * Convert term_reference fields into reference fields.
+ */
+function _reference_upgrade_convert_taxonomy_term_reference() {
+  // @todo
+
+  // Clear caches to ensure updated fields are loaded.
+  field_cache_clear();
+  /* @todo Invoking field_cache_clear() doesn't refresh fields in UI. */
+  cache_clear_all();
+}
+
+/**
+ * Modifies field base settings.
+ *
+ * @param array $settings
+ *   Field settings to be modified.
+ * @param string $target_enity_type
+ *   Entity type to target in the reference field.
+ */
+function _reference_upgrade_convert_field_base_settings(&$settings, $target_enity_type) {
+  $settings['module'] = 'reference';
+  $settings['type'] = 'reference';
+  // Discard all settings except target entity type.
+  $settings['settings'] = array(
+    'entity_type' => $target_enity_type,
+  );
+}
+
+/**
+ * Modifies field instance settings.
+ *
+ * @param array &$instance_settings
+ *   Field instance settings to be modified.
+ * @param array $bundles
+ *   Entity Bundles.
+ */
+function _reference_upgrade_convert_field_instance_settings(&$instance_settings, array $bundles = array()) {
+  // Convert field instance.
+  $instance_settings['widget']['module'] = 'reference';
+  // Always set widget type to 'reference_autocomplete'; there is no
+  // 'entityreference_autocomplete_tags' option in reference module.
+  $instance_settings['widget']['type'] = 'reference_autocomplete';
+  // Remove widget settings; no longer used.
+  $instance_settings['widget']['settings'] = array();
+  // Change widget to active.
+  $instance_settings['widget']['active'] = 1;
+  // Add missing key.
+  $instance_settings['default_value_function'] = NULL;
+
+  if (!empty($bundles)) {
+    // Move bundle filtering to instance settings.
+    $instance_settings['settings']['bundles'] = $bundles;
+  }
+}
